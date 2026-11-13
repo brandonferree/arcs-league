@@ -175,6 +175,8 @@ Phase 1 matters most: the league has no real games yet, and every later phase is
 ### Decided after the interview
 
 - **The owner's async-play bot (`brandonferree/ARCSdiscord`) stays separate** (owner, 2026-11-13). Games played there do not flow into this site, so there is no write API; campaigns are logged only through the web form and, from phase 3, this site's own bot.
+- **Automatic campaign titles** are "Campaign #N" (owner, 2026-11-13).
+- **Reigning champion** is the member with the most wins in closed campaigns, ties broken by win rate (owner, 2026-11-13).
 
 ## 11. Open
 

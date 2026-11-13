@@ -56,11 +56,13 @@ Design decisions worth knowing:
 - Admin pages (fates, seasons, guests, audit log). Seasons can be stored and filtered on, but there is no page to create one yet; the season picker appears once a season exists. Linking a guest to an account has a schema column but no screen.
 - Editing a campaign's title, season or player list after creation.
 
-## Questions for the owner
+## Owner decisions
 
-1. **`ARCSdiscord`**: answered — keep it separate. No write API will be built (recorded in `DESIGN.md`).
-2. Is "Campaign #N" a good automatic title, or would you like something else (for example the players' names and date)?
-3. The reigning champion on Home is currently the member with the most wins (ties broken by win rate). Is that what you mean by champion, or should it be the winner of the latest campaign, or a season winner?
+All answered on 2026-11-13 and recorded in `DESIGN.md`:
+
+1. **`ARCSdiscord`** stays separate. No write API will be built.
+2. Automatic titles stay **"Campaign #N"**.
+3. **Reigning champion** is the member with the most wins, ties broken by win rate (as built).
 
 ## Small notes
 
