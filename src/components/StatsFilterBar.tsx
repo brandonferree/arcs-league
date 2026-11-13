@@ -30,11 +30,15 @@ export function StatsFilterBar({
         <span className="field__label">To</span>
         <input className="input" type="date" name="to" defaultValue={filters.to ?? ""} />
       </label>
-      {seasons.length ? (
+      {seasons.length || filters.seasonId ? (
         <label className="field">
           <span className="field__label">Season</span>
           <select className="select" name="season" defaultValue={filters.seasonId ?? ""}>
             <option value="">All seasons</option>
+            {filters.seasonId && !seasons.some((s) => s.id === filters.seasonId) ? (
+              // A link to a season that no longer exists: say so rather than pretend "All seasons".
+              <option value={filters.seasonId}>Unknown season</option>
+            ) : null}
             {seasons.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}

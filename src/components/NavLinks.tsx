@@ -12,14 +12,15 @@ const LINKS = [
   { href: "/campaigns/new", label: "Log a game" },
 ];
 
-export function NavLinks() {
+export function NavLinks({ isModerator = false }: { isModerator?: boolean }) {
   const path = usePathname();
-  const current = LINKS.filter((l) => path === l.href || path.startsWith(`${l.href}/`)).sort(
+  const links = isModerator ? [...LINKS, { href: "/admin/seasons", label: "Seasons" }] : LINKS;
+  const current = links.filter((l) => path === l.href || path.startsWith(`${l.href}/`)).sort(
     (a, b) => b.href.length - a.href.length,
   )[0]?.href;
   return (
     <>
-      {LINKS.map((l) => (
+      {links.map((l) => (
         <Link key={l.href} href={l.href} aria-current={current === l.href ? "page" : undefined}>
           {l.label}
         </Link>

@@ -8,6 +8,8 @@
 - `/records`: champion, top Act III, most improved, most played fate, best A and B fates, deadliest fate, top win rate by class, seat order.
 - Filters on every stats page: date range (Act III date), season (shown once seasons exist), player count. Links between stats pages keep the filters.
 
+- `/admin/seasons` (moderators; added at the owner's request): create, rename and re-date seasons, delete them (their campaigns keep their results and lose the tag), and "Tag campaigns", which tags every untagged campaign whose Act I falls within the season's dates. All changes are audit-logged. A link to a season that no longer exists shows "Unknown season" in the filter.
+
 ## Definitions (also documented in `src/lib/stats.ts`)
 
 - Only closed campaigns count. Plays are act appearances. Keep % = successful Act I/II plays kept into the next act. Fate win % = wins / Act III finishes on that fate.
@@ -19,13 +21,13 @@
 
 ## Verified
 
-- 90 Vitest tests pass (24 new: pure stats on fixtures, loader against PGlite with filters and exclusion of in-progress and void).
+- 96 Vitest tests pass (30 new, including seasons: pure stats on fixtures, loader against PGlite with filters and exclusion of in-progress and void).
 - Typecheck and production build pass.
 - All pages checked in the browser against demo data, including filters and phone width.
 
 ## Not done / open
 
-- No seasons admin page: the season filter appears only once a season exists. Ask the owner before adding admin scope.
+- A single campaign's season can only be set when it is logged or by "Tag campaigns"; there is no per-campaign season editor yet.
 - Card content on fate pages and card win rates wait for phase 5.
 
 ## Demo data

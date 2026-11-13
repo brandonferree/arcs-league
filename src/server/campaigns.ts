@@ -71,7 +71,7 @@ function parse<T extends z.ZodTypeAny>(schema: T, input: unknown): z.infer<T> {
   return r.data;
 }
 
-async function audit(
+export async function audit(
   db: DbOrTx,
   actor: Actor,
   e: { action: string; entityType: string; entityId: string | number; campaignId?: number | null; before?: unknown; after?: unknown },
@@ -385,7 +385,7 @@ export function toPlayerRecords(
 // ---------------------------------------------------------------------------
 // Save an act
 
-const dateString = z
+export const dateString = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use the date format YYYY-MM-DD")
   .refine((s) => !Number.isNaN(Date.parse(`${s}T00:00:00Z`)), "Not a valid date");
@@ -619,7 +619,7 @@ export async function saveAct(
 // ---------------------------------------------------------------------------
 // Moderator actions
 
-function requireModerator(actor: Actor) {
+export function requireModerator(actor: Actor) {
   if (!actor.isModerator) throw new PermissionError("Only moderators can do that.");
 }
 

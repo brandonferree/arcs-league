@@ -473,6 +473,12 @@ td.gold a { color: var(--gold); }
   .line-chart__end { font-size: 16px; }
 }
 
+/* Seasons admin */
+.season-list { display: flex; flex-direction: column; gap: 14px; }
+.season-item { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--panel-inset); }
+.season-item__head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.season-item details summary { list-style: none; cursor: pointer; }
+
 /* ---- Footer ---- */
 
 .site-footer {

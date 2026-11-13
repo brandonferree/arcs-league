@@ -10,7 +10,7 @@ export async function SiteHeader() {
         ARCS LEAGUE
       </Link>
       <nav className="nav" aria-label="Main">
-        <NavLinks />
+        <NavLinks isModerator={!!session?.isModerator} />
         {session ? (
           <span className="nav__user">
             {session.avatarUrl ? <img className="avatar" src={session.avatarUrl} alt="" width={28} height={28} /> : null}
