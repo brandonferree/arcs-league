@@ -37,6 +37,7 @@ import {
   type PlayerRecord,
   type Tier,
 } from "@/lib/rules";
+import { pickChampion } from "@/lib/stats";
 
 /** A rejected write. `errors` are user-facing messages. */
 export class RuleError extends Error {
@@ -864,8 +865,7 @@ export async function homeStats(db: DbOrTx, now = new Date()): Promise<HomeStats
     .where(and(eq(campaigns.status, "closed"), eq(players.isGuest, false)))
     .groupBy(players.id, players.displayName);
 
-  standings.sort((a, b) => b.wins - a.wins || b.wins / b.games - a.wins / a.games || a.name.localeCompare(b.name));
-  const champ = standings[0] && standings[0].wins > 0 ? standings[0] : null;
+  const champ = pickChampion(standings);
 
   return {
     closedCount: counts?.closed ?? 0,

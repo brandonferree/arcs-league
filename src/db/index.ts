@@ -4,7 +4,8 @@
  *  - DATABASE_URL set to a postgres:// URL (Neon in production): node-postgres
  *    pool. Migrations run separately (`npm run db:migrate`, part of `build`).
  *  - DATABASE_URL empty (local development): embedded PGlite stored in ./.pglite,
- *    migrated automatically on first use. "memory" gives a throwaway database.
+ *    migrated automatically on first use. "memory" gives a throwaway database,
+ *    and "pglite:<folder>" uses another folder (development only).
  *
  * Both are exposed with the node-postgres Drizzle type; their query APIs match.
  */
@@ -42,7 +43,11 @@ export async function connectPglite(dataDir?: string): Promise<DB> {
 }
 
 function connect(): Promise<DB> {
-  const url = process.env.DATABASE_URL?.trim();
+  const url = process.env.DATABASE_URL?.trim() ?? "";
+  // "pglite:<folder>": a separate local database, e.g. the demo data from `npm run db:seed-demo`.
+  if (url.startsWith("pglite:") && !process.env.VERCEL) {
+    return connectPglite(path.resolve(/*turbopackIgnore: true*/ process.cwd(), url.slice("pglite:".length)));
+  }
   if (isPostgresUrl(url)) return connectPostgres(url);
   if (process.env.NODE_ENV === "production" && process.env.VERCEL) {
     throw new Error("DATABASE_URL must be a postgres:// URL in production.");

@@ -32,6 +32,24 @@ export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** "Planet Breaker" -> "planet-breaker", for fate page URLs. */
+export function fateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** 0.5714 -> "57%"; null -> "–". */
+export function formatPct(r: number | null | undefined): string {
+  return r === null || r === undefined ? "–" : `${Math.round(r * 100)}%`;
+}
+
+/** Averages to one decimal place; null -> "–". */
+export function formatAvg(n: number | null | undefined): string {
+  return n === null || n === undefined ? "–" : n.toFixed(1);
+}
+
 export function joinNames(names: string[]): string {
   if (names.length <= 1) return names.join("");
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;

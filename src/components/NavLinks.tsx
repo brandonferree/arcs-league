@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/campaigns", label: "Campaigns" },
+  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/players", label: "Players" },
+  { href: "/fates", label: "Fates" },
+  { href: "/records", label: "Records" },
   { href: "/campaigns/new", label: "Log a game" },
 ];
 

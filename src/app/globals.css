@@ -402,6 +402,77 @@ details.history summary { cursor: pointer; color: var(--cyan-light); }
 .history-list li { padding: 10px 12px; border: 1px solid var(--hairline); border-radius: 8px; background: var(--panel-inset); }
 .history-list pre { margin: 6px 0 0; white-space: pre-wrap; word-break: break-word; font-size: 12px; color: var(--muted); }
 
+/* ---- Stats pages (phase 2) ---- */
+
+.field--narrow { min-width: 0 !important; width: 110px; }
+.stats-filters .input[type="date"] { color-scheme: dark; }
+.grid-2--even { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 960px) { .grid-2--even { grid-template-columns: minmax(0, 1fr); } }
+.chip-link { text-decoration: none; display: inline-flex; }
+.chip-link:hover .chip { filter: brightness(1.12); }
+h1 .chip { font-size: 18px; padding: 6px 16px; vertical-align: middle; }
+h1 .chip .chip__tier { font-size: 16px; }
+h1 .badge { margin-left: 12px; vertical-align: middle; text-shadow: none; }
+td .badge { margin-left: 8px; }
+
+/* Awards: gold is for records, so the award value wears it */
+.award-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.award { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.award__title { margin: 0; font-size: 11px; letter-spacing: 2px; color: var(--muted); text-shadow: none; }
+.award__value { font-family: var(--font-display); font-weight: 700; font-size: 24px; color: var(--gold); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.award__value a { color: var(--gold); text-decoration: none; }
+.award__value a:hover { text-decoration: underline; }
+.award__value .chip { font-family: var(--font-body); font-size: 14px; }
+.award__detail { margin: 0; font-size: 13px; color: var(--text); }
+.award__empty { margin: 0; color: var(--muted); }
+.award__rule { margin: auto 0 0; padding-top: 8px; font-size: 12px; color: var(--muted); }
+td.gold a { color: var(--gold); }
+
+/*
+ * Charts. Fill colours for progression steps passed the colour-blind
+ * separation check on the panel surface; text never wears them.
+ */
+.chart { margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.pbar-rows { display: flex; flex-direction: column; gap: 14px; }
+.pbar-row { display: flex; flex-direction: column; gap: 6px; }
+.pbar-row__label { font-size: 13px; color: var(--text); }
+.pbar { display: flex; gap: 2px; height: 28px; }
+.pbar-seg {
+  flex: 1 1 0; min-width: 4px; border-radius: 4px; display: flex; align-items: center;
+  padding: 0 8px; overflow: visible; white-space: nowrap; cursor: default;
+}
+.pbar-seg:hover { filter: brightness(1.15); }
+.pbar-seg__text { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pbar-seg--started { background: #7c82b0; color: var(--on-tier); }
+.pbar-seg--kept { background: var(--cyan); color: var(--on-tier); }
+.pbar-seg--changed-after-success { background: var(--violet); color: #ffffff; }
+.pbar-seg--changed-after-failure { background: var(--danger); color: var(--on-tier); }
+.chart-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; color: var(--muted); }
+.chart-legend li { display: inline-flex; align-items: center; gap: 6px; }
+.chart-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+.mini-stats { margin: 16px 0 0; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+.mini-stats > div { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.mini-stats dt { color: var(--muted); min-width: 100px; }
+.mini-stats dd { margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.mini-stats__item { display: inline-flex; align-items: center; gap: 6px; color: var(--text); }
+
+.line-chart { width: 100%; height: auto; display: block; overflow: visible; }
+.line-chart__grid { stroke: var(--hairline); stroke-width: 1; }
+.line-chart__tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.line-chart__end { fill: var(--text-strong); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.line-chart__line { fill: none; stroke: var(--cyan); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.line-chart__hit { fill: transparent; }
+.line-chart__dot { fill: var(--cyan); stroke: #110f2b; stroke-width: 2; }
+.line-chart__point { outline: none; cursor: default; }
+.line-chart__point:hover .line-chart__dot, .line-chart__point:focus-visible .line-chart__dot { fill: var(--cyan-light); r: 6; }
+.line-chart__point:focus-visible .line-chart__hit { stroke: var(--cyan-light); stroke-width: 1.5; }
+/* The SVG scales down on phones; scale its text back up. */
+@media (max-width: 520px) {
+  .line-chart__tick { font-size: 15px; }
+  .line-chart__end { font-size: 16px; }
+}
+
 /* ---- Footer ---- */
 
 .site-footer {

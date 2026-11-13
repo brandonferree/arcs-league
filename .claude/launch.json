@@ -4,8 +4,27 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "dev-demo",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3005"
+      ],
+      "env": {
+        "DATABASE_URL": "pglite:.pglite-demo",
+        "NEXT_DIST_DIR": ".next-demo"
+      },
+      "port": 3005
     }
   ]
 }
