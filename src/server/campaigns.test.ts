@@ -135,6 +135,8 @@ describe("logging all three acts", () => {
     expect(c.acts).toHaveLength(3);
     expect(c.players.filter((p) => p.isWinner).map((p) => p.name)).toEqual(["Chris"]);
     expect(c.winnerOverridden).toBe(false);
+    expect(c.acts.map((a) => a.createdBy)).toEqual(["Chris", "Emma", "Emma"]);
+    expect(c.acts[0].updatedBy).toBeNull();
 
     const list = await listCampaigns(db, { status: "closed" });
     expect(list[0]).toMatchObject({ id, winners: ["Chris"], topScore: 72, actsRecorded: 3 });

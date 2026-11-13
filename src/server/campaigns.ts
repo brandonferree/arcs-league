@@ -4,6 +4,7 @@
  * Functions take the database as a parameter so tests can use in-memory PGlite.
  */
 import { and, asc, desc, eq, inArray, isNull, lt, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { z } from "zod";
 import type { DB, DbOrTx } from "@/db";
 import {
@@ -296,13 +297,13 @@ export async function getCampaign(db: DbOrTx, id: number, now = new Date()): Pro
     .where(eq(campaignPlayers.campaignId, id))
     .orderBy(asc(campaignPlayers.position));
 
+  const creator = alias(players, "creator");
+  const updater = alias(players, "updater");
   const actRows = await db
-    .select({
-      act: acts,
-      createdBy: sql<string | null>`(select display_name from players where id = ${acts.createdById})`,
-      updatedBy: sql<string | null>`(select display_name from players where id = ${acts.updatedById})`,
-    })
+    .select({ act: acts, createdBy: creator.displayName, updatedBy: updater.displayName })
     .from(acts)
+    .leftJoin(creator, eq(creator.id, acts.createdById))
+    .leftJoin(updater, eq(updater.id, acts.updatedById))
     .where(eq(acts.campaignId, id))
     .orderBy(asc(acts.actNo));
 
