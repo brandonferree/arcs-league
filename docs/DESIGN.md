@@ -172,10 +172,13 @@ Each phase should be usable on its own.
 
 Phase 1 matters most: the league has no real games yet, and every later phase is better tested with real data.
 
+### Decided after the interview
+
+- **The owner's async-play bot (`brandonferree/ARCSdiscord`) stays separate** (owner, 2026-11-13). Games played there do not flow into this site, so there is no write API; campaigns are logged only through the web form and, from phase 3, this site's own bot.
+
 ## 11. Open
 
 - **Accounts the owner must set up or authorise:** a Discord application (client ID and secret, bot token, public key), a Neon database, and a Vercel project. None exist yet. Guild, channel and moderator-role IDs are configuration, supplied as environment variables; do not commit them.
 - **Card permission:** the owner reports a yes from Buried Giant. Its exact scope (public display of card images) has not been seen in writing. If in doubt, ship the card reference with names, text and links first and add images after.
-- **Relation to the owner's async-play bot.** The owner has a separate project (`brandonferree/ARCSdiscord`) that plays ARCS asynchronously over Discord with a rules engine. It was not discussed in the design interview. If games played there should flow into this site automatically, the site needs a token-authenticated write API. Ask the owner before building for it.
 - Free tiers are ample for 40 members; photo storage is the first limit that would ever be reached.
 - Thresholds (5-game leaderboard minimum, award minimums) are guesses to revisit once real games exist.

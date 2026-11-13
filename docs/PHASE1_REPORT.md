@@ -58,7 +58,7 @@ Design decisions worth knowing:
 
 ## Questions for the owner
 
-1. **`ARCSdiscord`** (spec section 11): should games played on your async-play bot flow into this site automatically? If yes, the site needs a token-authenticated write API, and I would design it before phase 3. Nothing has been built for it.
+1. **`ARCSdiscord`**: answered — keep it separate. No write API will be built (recorded in `DESIGN.md`).
 2. Is "Campaign #N" a good automatic title, or would you like something else (for example the players' names and date)?
 3. The reigning champion on Home is currently the member with the most wins (ties broken by win rate). Is that what you mean by champion, or should it be the winner of the latest campaign, or a season winner?
 
