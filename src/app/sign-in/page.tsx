@@ -20,9 +20,7 @@ export default async function SignInPage({ searchParams }: { searchParams: SP })
   const sp = await searchParams;
   const next = safeNext(typeof sp.next === "string" ? sp.next : "/");
   const error = typeof sp.error === "string" ? ERRORS[sp.error] ?? ERRORS.failed : null;
-  const host = (await headers()).get("host") ?? "";
-  const hostname = host.startsWith("[") ? host.slice(0, host.indexOf("]") + 1) : host.split(":")[0];
-  const devStub = devStubEnabled(hostname);
+  const devStub = devStubEnabled(await headers());
   const configured = !!discordConfig();
   const session = await getSession();
 

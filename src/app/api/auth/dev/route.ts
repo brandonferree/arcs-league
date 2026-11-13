@@ -8,7 +8,7 @@ import { safeNext, SESSION_COOKIE, sessionCookieOptions, signSession } from "@/s
  * production build, on localhost. Creates players with a "dev:" Discord id.
  */
 export async function POST(req: NextRequest) {
-  if (!devStubEnabled(req.nextUrl.hostname)) {
+  if (!devStubEnabled(req.headers)) {
     return new NextResponse("Not found", { status: 404 });
   }
   const form = await req.formData();

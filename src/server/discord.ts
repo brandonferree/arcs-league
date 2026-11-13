@@ -166,11 +166,22 @@ export async function upsertDiscordPlayer(
   return row;
 }
 
-/** The localhost-only development sign-in stub. */
-export function devStubEnabled(hostname: string): boolean {
-  return (
-    process.env.DEV_AUTH_STUB === "1" &&
-    process.env.NODE_ENV !== "production" &&
-    ["localhost", "127.0.0.1", "[::1]", "::1"].includes(hostname)
-  );
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "[::1]", "::1"];
+
+function hostnameOf(host: string): string {
+  const h = host.trim().toLowerCase();
+  if (h.startsWith("[")) return h.slice(0, h.indexOf("]") + 1);
+  return h.split(":")[0];
+}
+
+/**
+ * The localhost-only development sign-in stub. Every host the request claims
+ * (Host and any X-Forwarded-Host) must be local.
+ */
+export function devStubEnabled(headers: Headers): boolean {
+  if (process.env.DEV_AUTH_STUB !== "1" || process.env.NODE_ENV === "production") return false;
+  const hosts = [headers.get("host") ?? "", ...(headers.get("x-forwarded-host") ?? "").split(",")]
+    .map(hostnameOf)
+    .filter(Boolean);
+  return hosts.length > 0 && hosts.every((h) => LOCAL_HOSTS.includes(h));
 }

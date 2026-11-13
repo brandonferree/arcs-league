@@ -84,7 +84,7 @@ export function ActForm(props: ActFormProps) {
 
   const fateById = useMemo(() => new Map(fates.map((f) => [String(f.id), f])), [fates]);
   const tierOf = useMemo(() => tierLookupFrom(fates), [fates]);
-  const allowedTiers: Tier[] = actNo === 1 ? ["A"] : actNo === 2 ? ["A", "B"] : ["A", "B", "C"];
+  const allowedTiers: readonly Tier[] = actNo === 1 ? ["A"] : actNo === 2 ? ["A", "B"] : ["A", "B", "C"];
 
   // ---- Build the rule-checker input from saved acts plus this form ----
   function recordsWith(current: Record<number, Row>): PlayerRecord[] {
@@ -109,17 +109,23 @@ export function ActForm(props: ActFormProps) {
   const violations = validateCampaign(recordsWith(rows), tierOf).filter((v) => v.code !== "table-size");
   const invalidNames = new Set(violations.flatMap((v) => v.players ?? []));
 
-  /** An option is blocked if picking it would add a rule violation for that player. */
+  /**
+   * An option is blocked if picking it would add a rule violation for that
+   * player, compared with the current selection. (A blank selection is not a
+   * neutral baseline: when editing Act I, a blank already "breaks" a kept fate
+   * in Act II.)
+   */
   function blockedReason(cpId: number, fateId: string): string | null {
     const name = players.find((p) => p.cpId === cpId)!.name;
-    const base = { ...rows, [cpId]: { ...rows[cpId], fateId: "" } };
-    const before = new Set(validateCampaign(recordsWith(base), tierOf).map((v) => v.message));
+    const before = new Set(validateCampaign(recordsWith(rows), tierOf).map((v) => v.message));
     const added = validateCampaign(recordsWith({ ...rows, [cpId]: { ...rows[cpId], fateId } }), tierOf).filter(
       (v) => !before.has(v.message) && (v.players ?? []).includes(name),
     );
     if (!added.length) return null;
     const shared = added.find((v) => v.code === "fate-shared");
     if (shared) return `taken by ${shared.players!.filter((n) => n !== name).join(", ")}`;
+    const later = added.find((v) => v.act && v.act > actNo);
+    if (later) return `conflicts with Act ${ROMAN[later.act!]}`;
     const codes = new Set(added.map((v) => v.code));
     if (codes.has("continued-after-failure")) return "failed last act";
     if (codes.has("returned-to-dropped")) return "dropped earlier";
