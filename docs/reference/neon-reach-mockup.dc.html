@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ARCS League home, Neon Reach theme</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#67e8f9}a:hover{color:#ffffff}
+</style>
+</helmet>
+<div style="position: relative; width: 1280px; height: 940px; box-sizing: border-box; overflow: hidden; background-color: #05060f; background-image: radial-gradient(1px 1px at 8% 12%, #ffffff 50%, transparent 51%), radial-gradient(1px 1px at 22% 64%, #c4b5fd 50%, transparent 51%), radial-gradient(2px 2px at 37% 28%, #ffffff 50%, transparent 51%), radial-gradient(1px 1px at 53% 82%, #67e8f9 50%, transparent 51%), radial-gradient(1px 1px at 68% 18%, #ffffff 50%, transparent 51%), radial-gradient(2px 2px at 81% 55%, #c4b5fd 50%, transparent 51%), radial-gradient(1px 1px at 93% 34%, #ffffff 50%, transparent 51%), radial-gradient(1px 1px at 46% 46%, #ffffff 50%, transparent 51%), radial-gradient(600px 380px at 85% 0%, rgba(168,85,247,0.28), transparent 70%), radial-gradient(520px 340px at 0% 100%, rgba(34,211,238,0.16), transparent 70%); font-family: Inter, system-ui, sans-serif; color: #e7e9ff">
+<svg aria-hidden="true" width="150" height="110" viewBox="0 0 150 110" style="position: absolute; right: 70px; top: 120px; opacity: 0.55"><polygon points="20,40 55,8 110,14 142,52 120,94 60,102 22,80" fill="#1a1838" stroke="#a855f7" stroke-width="1.5"/><polyline points="55,8 70,48 120,94" fill="none" stroke="#3b2f6b" stroke-width="1.5"/><polyline points="20,40 70,48 142,52" fill="none" stroke="#3b2f6b" stroke-width="1.5"/></svg>
+<svg aria-hidden="true" width="60" height="50" viewBox="0 0 60 50" style="position: absolute; right: 250px; top: 215px; opacity: 0.5"><polygon points="8,20 26,4 50,12 54,34 30,46 10,38" fill="#1a1838" stroke="#22d3ee" stroke-width="1.2"/></svg>
+<div style="position: relative; display: flex; align-items: center; justify-content: space-between; padding: 22px 48px; border-bottom: 1px solid rgba(168,85,247,0.45); box-shadow: 0 1px 18px rgba(168,85,247,0.35)">
+<div style="font-family: Orbitron, sans-serif; font-weight: 900; font-size: 22px; letter-spacing: 6px; color: #ffffff; text-shadow: 0 0 14px #a855f7">ARCS LEAGUE</div>
+<div style="display: flex; align-items: center; gap: 30px; font-family: Orbitron, sans-serif; font-size: 12px; letter-spacing: 2px">
+<a href="#" style="color: #67e8f9; text-decoration: none">CAMPAIGNS</a>
+<a href="#" style="color: #c9cdf5; text-decoration: none">LEADERBOARD</a>
+<a href="#" style="color: #c9cdf5; text-decoration: none">PLAYERS</a>
+<a href="#" style="color: #c9cdf5; text-decoration: none">FATES</a>
+<a href="#" style="color: #c9cdf5; text-decoration: none">CARDS</a>
+<a href="#" style="color: #c9cdf5; text-decoration: none">RECORDS</a>
+<a href="#" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; border: 1px solid #a855f7; border-radius: 6px; color: #ffffff; text-decoration: none; box-shadow: 0 0 12px rgba(168,85,247,0.6), inset 0 0 10px rgba(168,85,247,0.25)">SIGN IN WITH DISCORD</a>
+</div>
+</div>
+<div style="position: relative; padding: 44px 48px 0; display: flex; flex-direction: column; gap: 30px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-family: Orbitron, sans-serif; font-size: 12px; letter-spacing: 4px; color: #67e8f9">THE BLIGHTED REACH CHRONICLE</div>
+<h1 style="margin: 0; font-family: Orbitron, sans-serif; font-weight: 700; font-size: 46px; letter-spacing: 2px; color: #ffffff; text-shadow: 0 0 22px rgba(168,85,247,0.8)">Three acts. One Reach.</h1>
+<div style="font-size: 16px; color: #b3b8e6; max-width: 640px">Every campaign logged act by act: who chose which fate, who kept it, who broke it, and who ruled at the end.</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px">
+<sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+<div style="padding: 18px 20px; background: rgba(18,16,46,0.78); border: 1px solid rgba(168,85,247,0.5); border-radius: 10px; box-shadow: 0 0 16px rgba(168,85,247,0.22)">
+<div style="font-family: Orbitron, sans-serif; font-size: 11px; letter-spacing: 2px; color: #b3b8e6">{{ k.label }}</div>
+<div style="margin-top: 8px; font-family: Orbitron, sans-serif; font-weight: 700; font-size: 30px; color: {{ k.c }}">{{ k.value }}</div>
+<div style="margin-top: 4px; font-size: 13px; color: #b3b8e6">{{ k.note }}</div>
+</div>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 5fr 6fr; gap: 22px">
+<div style="padding: 22px; background: rgba(18,16,46,0.78); border: 1px solid rgba(34,211,238,0.5); border-radius: 10px; box-shadow: 0 0 16px rgba(34,211,238,0.18)">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-family: Orbitron, sans-serif; font-size: 15px; letter-spacing: 3px; color: #67e8f9">LATEST RESULTS</h2>
+<span style="font-size: 12px; color: #b3b8e6">Sample data</span>
+</div>
+<div style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{ results }}" as="r" hint-placeholder-count="3">
+<div style="padding: 14px 16px; background: rgba(5,6,15,0.6); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; font-size: 13px; color: #b3b8e6"><span>{{ r.date }} · {{ r.players }}</span><span>Act III · {{ r.score }} pts</span></div>
+<div style="font-size: 17px; font-weight: 600; color: #f5c451">{{ r.winner }} <span style="font-weight: 400; font-size: 13px; color: #b3b8e6">won</span></div>
+<div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600">
+<span style="padding: 4px 10px; border-radius: 999px; border: 1px solid {{ r.c1 }}; color: {{ r.c1 }}">I · {{ r.f1 }}</span>
+<span style="color: #b3b8e6">›</span>
+<span style="padding: 4px 10px; border-radius: 999px; border: 1px solid {{ r.c2 }}; color: {{ r.c2 }}">II · {{ r.f2 }}</span>
+<span style="color: #b3b8e6">›</span>
+<span style="padding: 4px 10px; border-radius: 999px; border: 1px solid {{ r.c3 }}; color: {{ r.c3 }}">III · {{ r.f3 }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="padding: 22px; background: rgba(18,16,46,0.78); border: 1px solid rgba(168,85,247,0.5); border-radius: 10px; box-shadow: 0 0 16px rgba(168,85,247,0.22)">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-family: Orbitron, sans-serif; font-size: 15px; letter-spacing: 3px; color: #d8b4fe">FATE PERFORMANCE</h2>
+<span style="font-size: 12px; color: #b3b8e6">Sample data</span>
+</div>
+<div style="margin-top: 14px; display: grid; grid-template-columns: 44px 1.6fr repeat(5, minmax(0, 1fr)); column-gap: 10px; padding: 0 10px 10px; font-family: Orbitron, sans-serif; font-size: 10px; letter-spacing: 1.5px; color: #b3b8e6; border-bottom: 1px solid rgba(168,85,247,0.5)">
+<span>TIER</span><span>FATE</span><span style="text-align: right">PLAYS</span><span style="text-align: right">SUCC %</span><span style="text-align: right">KEEP %</span><span style="text-align: right">WIN %</span><span style="text-align: right">AVG III</span>
+</div>
+<sc-for list="{{ fates }}" as="f" hint-placeholder-count="6">
+<div style="display: grid; grid-template-columns: 44px 1.6fr repeat(5, minmax(0, 1fr)); column-gap: 10px; align-items: center; padding: 11px 10px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-variant-numeric: tabular-nums">
+<span style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; font-family: Orbitron, sans-serif; font-weight: 700; font-size: 12px; color: #05060f; background: {{ f.c }}; box-shadow: 0 0 10px {{ f.c }}">{{ f.tier }}</span>
+<span style="font-weight: 600; color: #ffffff">{{ f.name }}</span>
+<span style="text-align: right">{{ f.plays }}</span>
+<span style="text-align: right">{{ f.succ }}</span>
+<span style="text-align: right">{{ f.keep }}</span>
+<span style="text-align: right; color: #f5c451; font-weight: 600">{{ f.win }}</span>
+<span style="text-align: right">{{ f.avg }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":940}}'>
+class Component extends DCLogic {
+renderVals() {
+var A = '#5eead4', B = '#fbbf24', C = '#f472b6';
+return {
+kpis: [
+{ label: 'CAMPAIGNS', value: '12', note: '2 in progress', c: '#ffffff' },
+{ label: 'CAPTAINS', value: '10', note: '7 ranked', c: '#ffffff' },
+{ label: 'TOP ACT III', value: '72', note: 'Emma · Planet Breaker', c: '#67e8f9' },
+{ label: 'REIGNING CHAMPION', value: 'Emma', note: '4 wins in 7', c: '#f5c451' }
+],
+results: [
+{ date: 'Nov 08', players: '4 players', score: '72', winner: 'Emma', f1: 'Advocate', f2: 'Advocate', f3: 'Planet Breaker', c1: A, c2: A, c3: B },
+{ date: 'Nov 01', players: '3 players', score: '58', winner: 'Chris', f1: 'Magnate', f2: 'Pirate', f3: 'Judge', c1: A, c2: B, c3: C },
+{ date: 'Oct 25', players: '4 players', score: '64', winner: 'Mark', f1: 'Steward', f2: 'Steward', f3: 'Steward', c1: A, c2: A, c3: A }
+],
+fates: [
+{ tier: 'A', name: 'Steward', plays: '9', succ: '67%', keep: '71%', win: '33%', avg: '44.1', c: A },
+{ tier: 'A', name: 'Advocate', plays: '8', succ: '63%', keep: '60%', win: '25%', avg: '39.5', c: A },
+{ tier: 'B', name: 'Planet Breaker', plays: '6', succ: '50%', keep: '67%', win: '33%', avg: '47.8', c: B },
+{ tier: 'B', name: 'Pirate', plays: '5', succ: '60%', keep: '33%', win: '20%', avg: '36.2', c: B },
+{ tier: 'C', name: 'Judge', plays: '4', succ: '–', keep: '–', win: '50%', avg: '31.0', c: C },
+{ tier: 'C', name: 'Gate Wraith', plays: '3', succ: '–', keep: '–', win: '33%', avg: '28.7', c: C }
+]
+};
+}
+}
+</script>
+</body>
+</html>
