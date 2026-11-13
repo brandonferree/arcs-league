@@ -71,6 +71,8 @@ You do not need to create any tables: every Vercel build runs the migrations (`n
 
 - **Preview deployments** (from branches) also run migrations against the same database, and their sign-in redirects back to `APP_URL` (production). Both are fine for a site this size. If you later want isolated preview databases, the Vercel–Neon integration can create a database branch per preview.
 - If sign-in says the account is not a member, check `DISCORD_GUILD_ID`. If it says sign-in failed, check the client secret and that the redirect URL matches exactly (`https`, no trailing slash).
+- If there is no **Mod** badge: you must hold the `ARCS Mod` role yourself (owning or administering the server does not count), and `DISCORD_MOD_ROLE_ID` must be the role's numeric ID, not its name. Roles are read at sign-in, so sign out and in again; after changing a variable in Vercel, redeploy.
+- When connecting Neon from Vercel's Storage tab, set the custom prefix to `DATABASE` so the variable is named `DATABASE_URL`.
 
 ## Local development
 

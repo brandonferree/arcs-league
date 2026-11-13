@@ -43,10 +43,23 @@ Design decisions worth knowing:
   - The development sign-in refuses a non-localhost `Host` (404) and works on localhost.
 - Bugs found and fixed during this check: the act "saved by" name was always blank (an unqualified column in a subquery); editing Act I did not block fates that would break a fate kept into Act II; the dev sign-in host check trusted the URL rather than the Host header.
 
-## Not verified
+## First deployment (2026-11-13)
 
-- **Real Discord sign-in**, the membership check and the moderator-role check against Discord's API. The code follows Discord's documented OAuth2 flow and endpoints, but it cannot run until the application exists (see `SETUP.md`).
-- **Neon and Vercel.** Never deployed; migrations have only run on PGlite. The same SQL runs on Neon's Postgres, but the first real deploy is the test.
+Deployed to Vercel (Hobby) with Neon created from Vercel's Storage tab (`DATABASE_URL` via the custom prefix `DATABASE`).
+
+Verified on production:
+
+- Migrations ran on Neon: the 24 fates are seeded.
+- Every public page returns 200; the development sign-in route returns 404 and the sign-in page shows no development form.
+- Real Discord sign-in round-trips through `/api/auth/callback`.
+- The moderator-role check: the owner gets the Mod badge once they hold `ARCS Mod` (owning the server is not enough).
+
+Still to check on production:
+
+- A non-member being sent to `/sign-in?error=not-member` (needs an account outside the server).
+- Logging a full campaign on production.
+
+## Not verified
 - **Reduced motion with the OS setting actually on** (only the CSS rule was checked), and real phones (only an emulated 375px viewport).
 - Screen readers and keyboard-only use were not tested beyond using labelled native controls.
 
