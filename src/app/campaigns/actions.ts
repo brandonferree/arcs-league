@@ -16,6 +16,8 @@ import {
   type ActInput,
   type CreateCampaignInput,
 } from "@/server/campaigns";
+import { getPhotoStore, StorageNotConfiguredError } from "@/server/photo-store";
+import { campaignPhotoKeys, deletePhoto, setPhotosPublic } from "@/server/photos";
 import { getSession, toActor } from "@/server/session";
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; errors: string[] };
@@ -25,7 +27,9 @@ async function run<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
     return { ok: true, data: await fn() };
   } catch (err) {
     if (err instanceof RuleError) return { ok: false, errors: err.errors };
-    if (err instanceof PermissionError || err instanceof NotFoundError) return { ok: false, errors: [err.message] };
+    if (err instanceof PermissionError || err instanceof NotFoundError || err instanceof StorageNotConfiguredError) {
+      return { ok: false, errors: [err.message] };
+    }
     console.error(err);
     return { ok: false, errors: ["Something went wrong saving that. Please try again."] };
   }
@@ -62,7 +66,7 @@ export async function saveActAction(
   });
 }
 
-/** Moderator form actions on the campaign page. Errors come back as a query string. */
+/** Form actions on the campaign page (moderator tools, photos). Errors come back as a query string. */
 async function modAction(campaignId: number, fn: () => Promise<void>, after = `/campaigns/${campaignId}`) {
   const r = await run(fn);
   revalidatePath("/");
@@ -86,5 +90,30 @@ export async function deleteCampaignAction(formData: FormData) {
   if (formData.get("confirm") !== "delete") {
     redirect(`/campaigns/${id}?error=${encodeURIComponent('Type "delete" to confirm.')}`);
   }
-  await modAction(id, async () => deleteCampaign(await getDb(), await requireActor(), id), "/campaigns");
+  await modAction(
+    id,
+    async () => {
+      const db = await getDb();
+      const keys = await campaignPhotoKeys(db, id);
+      await deleteCampaign(db, await requireActor(), id);
+      // The rows went with the campaign; now the files. Best effort: a leftover file is only wasted space.
+      if (keys.length) await getPhotoStore().del(keys).catch((e) => console.error("photo cleanup failed", e));
+    },
+    "/campaigns",
+  );
+}
+
+export async function deletePhotoAction(formData: FormData) {
+  const campaignId = Number(formData.get("campaignId"));
+  const photoId = Number(formData.get("photoId"));
+  await modAction(campaignId, async () => {
+    await deletePhoto(await getDb(), getPhotoStore(), await requireActor(), photoId);
+  }, `/campaigns/${campaignId}#photos`);
+}
+
+export async function setPhotosPublicAction(formData: FormData) {
+  const campaignId = Number(formData.get("campaignId"));
+  await modAction(campaignId, async () =>
+    setPhotosPublic(await getDb(), await requireActor(), campaignId, formData.get("public") === "1"),
+  `/campaigns/${campaignId}#photos`);
 }

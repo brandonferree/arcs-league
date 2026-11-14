@@ -341,6 +341,7 @@ table.data a:hover { color: var(--cyan-light); }
 .badge--winner { border-color: var(--gold); color: var(--gold); }
 .badge--guest { border-style: dashed; }
 .badge--mod { border-color: var(--violet); color: var(--violet-soft); }
+.badge--photos { border-style: dashed; border-color: var(--muted); color: var(--muted); }
 
 /* ---- Forms ---- */
 
@@ -486,3 +487,30 @@ td.gold a { color: var(--gold); }
   font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 6px;
 }
 .site-footer p { margin: 0; max-width: 900px; }
+
+/* ---------------------------------------------------------------------------
+   Photos (phase 4)
+   ------------------------------------------------------------------------- */
+.photo-acts { display: flex; flex-direction: column; gap: 22px; }
+.photo-act__title { margin: 0 0 10px; font-family: var(--font-display); font-size: 13px; letter-spacing: 2px; text-transform: uppercase; color: var(--nav); }
+.photo-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+.photo-slot { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.photo-slot__figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.photo-slot__figure figcaption { font-size: 13px; overflow-wrap: anywhere; }
+.photo-slot__frame {
+  display: block; aspect-ratio: 4 / 3; overflow: hidden;
+  border: 1px solid var(--line); border-radius: 8px; background: var(--panel-inset);
+}
+.photo-slot__frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+a.photo-slot__frame:hover { border-color: var(--border-cyan); }
+.photo-slot__frame--empty {
+  display: flex; align-items: center; justify-content: center;
+  border-style: dashed; color: var(--muted); font-size: 13px;
+}
+.photo-slot__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.photo-slot__remove form { margin-top: 8px; }
+.photo-upload { display: flex; flex-direction: column; gap: 6px; }
+.photo-upload label { cursor: pointer; }
+.photo-upload label:focus-within { outline: 2px solid var(--cyan-light); outline-offset: 2px; }
+.photo-upload label[aria-disabled] { opacity: 0.7; cursor: progress; }
+.photo-upload__error { margin: 0; color: var(--danger); font-size: 13px; }

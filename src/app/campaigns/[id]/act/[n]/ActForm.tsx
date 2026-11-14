@@ -241,6 +241,9 @@ export function ActForm(props: ActFormProps) {
           <span className="field__label">Notes (optional)</span>
           <textarea className="textarea" value={notes} maxLength={4000} onChange={(e) => setNotes(e.target.value)} />
         </label>
+        <p className="small muted" style={{ margin: "12px 0 0" }}>
+          Photos of the board and of each player&rsquo;s tableau are added on the campaign page once the act is saved.
+        </p>
       </section>
 
       <section className="panel panel--cyan" aria-labelledby="results-h">

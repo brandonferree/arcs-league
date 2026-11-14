@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FateChip, ProgressionLegend, ProgressionMark } from "@/components/fates";
+import { PhotosBadge } from "@/components/PhotosBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getDb } from "@/db";
 import { formatDate, formatDateTime, joinNames, ROMAN } from "@/lib/format";
-import { canEditAct, canRecordAct, editWindowEndsAt } from "@/lib/permissions";
+import { canEditAct, canManagePhotos, canRecordAct, canViewPhotos, editWindowEndsAt } from "@/lib/permissions";
 import { progressionSteps, type ActNumber } from "@/lib/rules";
 import { campaignHistory, getCampaign } from "@/server/campaigns";
+import { expectedPhotos, listCampaignPhotos } from "@/server/photos";
 import { getSession, toActor } from "@/server/session";
 import { deleteCampaignAction, reopenCampaignAction, voidCampaignAction } from "../actions";
+import { PhotosPanel } from "./PhotosPanel";
 
 type Params = Promise<{ id: string }>;
 type SP = Promise<Record<string, string | string[] | undefined>>;
@@ -38,6 +41,8 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const error = typeof sp.error === "string" ? sp.error : null;
   const history = actor?.isModerator ? await campaignHistory(await getDb(), c.id) : [];
   const guildId = process.env.DISCORD_GUILD_ID;
+  const photos = await listCampaignPhotos(await getDb(), c.id);
+  const canViewPhotosHere = canViewPhotos(!!session, c.photosPublic);
 
   return (
     <>
@@ -56,6 +61,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
         </div>
         <div className="actions small muted">
           <StatusBadge status={c.status} stalled={c.stalled} />
+          <PhotosBadge have={photos.length} expected={c.status === "void" ? 0 : expectedPhotos(c.acts.length, c.playerCount)} />
           <span>{c.playerCount} players</span>
           <span>Started {formatDate(c.createdAt.toISOString().slice(0, 10))}</span>
           {c.createdBy ? <span>Logged by {c.createdBy}</span> : null}
@@ -217,6 +223,13 @@ export default async function CampaignPage({ params, searchParams }: { params: P
           </p>
         ) : null}
       </section>
+
+      <PhotosPanel
+        c={c}
+        photos={canViewPhotosHere ? photos : []}
+        canView={canViewPhotosHere}
+        canManage={canManagePhotos(actor, c.access)}
+      />
 
       {actor?.isModerator ? (
         <section className="panel" aria-labelledby="mod-h">

@@ -6,7 +6,7 @@
  * every act keeps its date.
  *
  * Later phases add tables that hang off these without changing them:
- *   - photos      (act_id, campaign_player_id null = board photo, blob keys)   phase 4
+ *   - photos      (act_id, campaign_player_id null = board photo, blob keys)   phase 4 (below)
  *   - cards       (Buried Giant card id, name, text, tags, meta, blob keys)    phase 5
  *   - card_tags   (photo_id, card_id, tagged_by)                                phase 5
  * `fates.card_id` already holds the ARCS-FATExx id to join fates to cards.
@@ -197,6 +197,33 @@ export const actResults = pgTable(
   ],
 );
 
+/**
+ * Act photos (phase 4): one board photo per act (campaign_player_id null) and
+ * one tableau photo per player per act. Each has a full-size and a thumbnail
+ * copy in storage, both JPEG, downscaled in the browser before upload.
+ * Replacing a photo inserts a new row, so photo URLs can be cached forever.
+ */
+export const photos = pgTable(
+  "photos",
+  {
+    id: serial("id").primaryKey(),
+    actId: integer("act_id").notNull().references(() => acts.id, { onDelete: "cascade" }),
+    /** Whose tableau this is; null for the board photo. */
+    campaignPlayerId: integer("campaign_player_id").references(() => campaignPlayers.id, { onDelete: "cascade" }),
+    fullKey: text("full_key").notNull(),
+    thumbKey: text("thumb_key").notNull(),
+    width: integer("width").notNull(),
+    height: integer("height").notNull(),
+    bytes: integer("bytes").notNull(),
+    uploadedById: integer("uploaded_by_id").references(() => players.id),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("photos_tableau_unique").on(t.actId, t.campaignPlayerId),
+    uniqueIndex("photos_board_unique").on(t.actId).where(sql`${t.campaignPlayerId} is null`),
+  ],
+);
+
 /** Every change: who, when, before and after. */
 export const auditLog = pgTable(
   "audit_log",
@@ -225,3 +252,4 @@ export type Campaign = typeof campaigns.$inferSelect;
 export type Act = typeof acts.$inferSelect;
 export type ActResult = typeof actResults.$inferSelect;
 export type Season = typeof seasons.$inferSelect;
+export type Photo = typeof photos.$inferSelect;

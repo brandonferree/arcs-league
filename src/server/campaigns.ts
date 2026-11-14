@@ -14,6 +14,7 @@ import {
   campaignPlayers,
   campaigns,
   fates,
+  photos,
   players,
   seasons,
   type CampaignStatus,
@@ -265,6 +266,8 @@ export interface CampaignDetail {
   winnerOverrideReason: string | null;
   voidReason: string | null;
   discordThreadId: string | null;
+  /** Photos are members-only unless this is set. */
+  photosPublic: boolean;
   createdAt: Date;
   closedAt: Date | null;
   lastActivityAt: Date;
@@ -356,6 +359,7 @@ export async function getCampaign(db: DbOrTx, id: number, now = new Date()): Pro
     winnerOverrideReason: camp.winnerOverrideReason,
     voidReason: camp.voidReason,
     discordThreadId: camp.discordThreadId,
+    photosPublic: camp.photosPublic,
     createdAt: camp.createdAt,
     closedAt: camp.closedAt,
     lastActivityAt: camp.lastActivityAt,
@@ -725,6 +729,8 @@ export interface CampaignListRow {
   topScore: number | null;
   /** Fate path of the (first) winner: Act I, II, III. */
   winnerPath: { fate: string; tier: Tier }[];
+  /** Board and tableau photos uploaded so far (phase 4). */
+  photoCount: number;
 }
 
 export async function listCampaigns(db: DbOrTx, f: CampaignListFilters = {}, now = new Date()): Promise<CampaignListRow[]> {
@@ -789,6 +795,14 @@ export async function listCampaigns(db: DbOrTx, f: CampaignListFilters = {}, now
         .where(inArray(actResults.actId, actRows.map((a) => a.id)))
     : [];
 
+  const photoRows = actRows.length
+    ? await db
+        .select({ actId: photos.actId, n: sql<number>`count(*)`.mapWith(Number) })
+        .from(photos)
+        .where(inArray(photos.actId, actRows.map((a) => a.id)))
+        .groupBy(photos.actId)
+    : [];
+
   return rows.map(({ c, season }) => {
     const mine = cps.filter((p) => p.campaignId === c.id);
     const myActs = actRows.filter((a) => a.campaignId === c.id).sort((a, b) => a.actNo - b.actNo);
@@ -813,6 +827,7 @@ export async function listCampaigns(db: DbOrTx, f: CampaignListFilters = {}, now
       winners: mine.filter((p) => p.isWinner).map((p) => p.name),
       topScore: act3Scores.length ? Math.max(...act3Scores) : null,
       winnerPath,
+      photoCount: photoRows.filter((p) => myActs.some((a) => a.id === p.actId)).reduce((n, p) => n + p.n, 0),
     };
   });
 }

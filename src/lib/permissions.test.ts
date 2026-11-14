@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canEditAct, canRecordAct, isStalled, type CampaignAccess } from "./permissions";
+import { canEditAct, canManagePhotos, canRecordAct, canViewPhotos, isStalled, type CampaignAccess } from "./permissions";
 
 const campaign: CampaignAccess = { status: "in_progress", createdById: 9, playerIds: [1, 2, 3] };
 const player = { playerId: 1, isModerator: false };
@@ -49,5 +49,24 @@ describe("stalled", () => {
   });
   it("never flags closed campaigns", () => {
     expect(isStalled("closed", new Date("2020-01-01T00:00:00Z"), now)).toBe(false);
+  });
+});
+
+describe("photos", () => {
+  it("lets participants manage photos at any time, but not on a void campaign", () => {
+    expect(canManagePhotos(player, { ...campaign, status: "closed" })).toBe(true);
+    expect(canManagePhotos(player, { ...campaign, status: "void" })).toBe(false);
+  });
+  it("never lets outsiders or signed-out visitors manage photos", () => {
+    expect(canManagePhotos(outsider, campaign)).toBe(false);
+    expect(canManagePhotos(null, campaign)).toBe(false);
+  });
+  it("always lets moderators manage photos", () => {
+    expect(canManagePhotos(mod, { ...campaign, status: "void" })).toBe(true);
+  });
+  it("shows photos to members, or to everyone once switched public", () => {
+    expect(canViewPhotos(false, false)).toBe(false);
+    expect(canViewPhotos(true, false)).toBe(true);
+    expect(canViewPhotos(false, true)).toBe(true);
   });
 });

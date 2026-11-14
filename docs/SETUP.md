@@ -13,6 +13,7 @@ At the end you will have set these variables in Vercel:
 | `DISCORD_CLIENT_SECRET` | Discord application, OAuth2 page (step 1) | Yes |
 | `DISCORD_GUILD_ID` | Your Discord server (step 1) | Keep private |
 | `DISCORD_MOD_ROLE_ID` | The moderator role in your server (step 1) | Keep private |
+| `BLOB_READ_WRITE_TOKEN` | Added by Vercel when you connect a Blob store (step 4, photos) | Yes |
 
 `DISCORD_PUBLIC_KEY`, `DISCORD_BOT_TOKEN` and `DISCORD_ARCS_CHANNEL_ID` are for the bot in phase 3; leave them unset for now. **Never set `DEV_AUTH_STUB` on Vercel.** (It is ignored in production builds anyway.)
 
@@ -74,6 +75,20 @@ You do not need to create any tables: every Vercel build runs the migrations (`n
 - If there is no **Mod** badge: you must hold the `ARCS Mod` role yourself (owning or administering the server does not count), and `DISCORD_MOD_ROLE_ID` must be the role's numeric ID, not its name. Roles are read at sign-in, so sign out and in again; after changing a variable in Vercel, redeploy.
 - When connecting Neon from Vercel's Storage tab, set the custom prefix to `DATABASE` so the variable is named `DATABASE_URL`.
 
+## 4. Photo storage (phase 4)
+
+Photos live in a **private** Vercel Blob store. The site serves them itself, checking who is asking, so members-only photos stay members-only.
+
+1. In the Vercel project, open **Storage → Create Database → Blob** (it may be listed as **Blob** under "Vercel" storage).
+2. Name it `arcs-league-photos`, choose **Private** access, pick the region nearest your Neon database (US East), and create it.
+3. Connect it to the `arcs-league` project for all environments. Vercel adds `BLOB_READ_WRITE_TOKEN` itself; leave the variable prefix as `BLOB`.
+4. **Deployments → ⋯ → Redeploy** so the running site picks up the new variable.
+5. Open a campaign with a recorded act, add a photo in the **Photos** panel, and check it shows.
+
+Until the store is connected, adding a photo on the live site says "Photo storage is not set up yet"; everything else works.
+
+Storage is the free tier's first limit (spec section 11). Each photo is roughly 0.3–1 MB after shrinking, so a full four-player campaign (15 photos) is roughly 5–15 MB. Watch **Storage → arcs-league-photos → Usage**.
+
 ## Local development
 
 No accounts needed. The app uses an embedded Postgres (PGlite) stored in `.pglite/` when `DATABASE_URL` is empty, and creates its tables on first start.
@@ -91,6 +106,8 @@ Set `DEV_AUTH_STUB=1` in `.env.local`, then:
 ```bash
 npm run dev
 ```
+
+Photos are saved to `.photos-local/` (ignored by git) when `BLOB_READ_WRITE_TOKEN` is empty.
 
 Open <http://localhost:3000/sign-in> and use **Development sign-in** to sign in as any name, optionally as a moderator. The stub works only on localhost, only with that flag, and never in a production build.
 

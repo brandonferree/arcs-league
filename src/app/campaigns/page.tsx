@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FatePath } from "@/components/fates";
+import { PhotosBadge } from "@/components/PhotosBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getDb } from "@/db";
 import { formatDate, joinNames } from "@/lib/format";
 import { listCampaigns, listSeasons, type StatusFilter } from "@/server/campaigns";
+import { expectedPhotos } from "@/server/photos";
 
 export const metadata: Metadata = { title: "Campaigns" };
 
@@ -114,6 +116,7 @@ export default async function CampaignsPage({ searchParams }: { searchParams: SP
                     </td>
                     <td>
                       <StatusBadge status={c.status} stalled={c.stalled} />
+                      <PhotosBadge have={c.photoCount} expected={c.status === "void" ? 0 : expectedPhotos(c.actsRecorded, c.playerCount)} />
                     </td>
                     <td>{c.players.map((p) => p.name).join(", ")}</td>
                     <td className="winner-name">{c.winners.length ? joinNames(c.winners) : <span className="muted">–</span>}</td>

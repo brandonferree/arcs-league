@@ -43,6 +43,22 @@ export function canEditAct(
   return isParticipant(actor, c) && now.getTime() - actSavedAt.getTime() < EDIT_WINDOW_MS;
 }
 
+/**
+ * Adding, replacing or removing act photos, and switching a campaign's photos
+ * public: participants at any time (photos often arrive after the game), except
+ * on a void campaign; moderators always.
+ */
+export function canManagePhotos(actor: Actor | null, c: CampaignAccess): boolean {
+  if (!actor) return false;
+  if (actor.isModerator) return true;
+  return c.status !== "void" && isParticipant(actor, c);
+}
+
+/** Photos are members-only unless the campaign's photos are switched public. */
+export function canViewPhotos(signedIn: boolean, photosPublic: boolean): boolean {
+  return signedIn || photosPublic;
+}
+
 export function editWindowEndsAt(actSavedAt: Date): Date {
   return new Date(actSavedAt.getTime() + EDIT_WINDOW_MS);
 }

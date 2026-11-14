@@ -13,3 +13,6 @@ out/
 .pglite-*/
 next-env.d.ts
 *.tsbuildinfo
+
+# Local photo storage (development)
+.photos-local/

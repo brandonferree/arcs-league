@@ -15,6 +15,13 @@
       "when": 1794599031368,
       "tag": "0001_seed_fates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794671748302,
+      "tag": "0002_photos",
+      "breakpoints": true
     }
   ]
 }
