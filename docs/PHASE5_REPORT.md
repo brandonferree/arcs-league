@@ -25,10 +25,13 @@ Built 2026-11-14 at the owner's request. It first shipped text-only (8dd491a); t
 - Typecheck and production build pass.
 - In the browser against demo data: a real import of 459 cards from Buried Giant, copying all 459 images (about 30 seconds locally), a second check reporting "up to date", card and fate pages, tagging, searching, removing a tag, the card's sighting count, the campaign page's tag list, signed-out views, and a 375 px phone layout.
 
-## To do on production
+## Production
+
+- Import and image copy done by the owner on the live site (2026-11-14); images are served from the Blob store.
+
+## How it was set up
 
 - A moderator opens **Cards → Card import**, clicks **Check Buried Giant for changes**, **Import these changes**, then **Copy card images**.
-- Not verified against the real Blob store or on Vercel (sharp runs there as part of Next.js, but this was only built locally).
 
 ## Open
 
