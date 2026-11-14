@@ -8,7 +8,7 @@
  * Later phases add tables that hang off these without changing them:
  *   - photos      (act_id, campaign_player_id null = board photo, blob keys)   phase 4 (below)
  *   - cards       (Buried Giant card id, name, text, tags, meta, blob keys)    phase 5 (below)
- *   - card_tags   (photo_id, card_id, tagged_by)                                phase 5 (below)
+ *   - card_tags   (act_id, campaign_player_id, card_id, tagged_by)              phase 5 (below)
  * `fates.card_id` already holds the ARCS-FATExx id to join fates to cards.
  */
 import { sql } from "drizzle-orm";
@@ -264,17 +264,27 @@ export const cards = pgTable(
   (t) => [index("cards_fate_idx").on(t.fateId), index("cards_type_idx").on(t.type)],
 );
 
-/** A card a member saw on a tableau photo (phase 5). */
+/**
+ * A card in a player's tableau at the end of an act (phase 5). Belongs to the
+ * tableau (act + player), not to a photo: a photo helps but is not required,
+ * and replacing or removing the photo keeps the cards.
+ */
 export const cardTags = pgTable(
   "card_tags",
   {
     id: serial("id").primaryKey(),
-    photoId: integer("photo_id").notNull().references(() => photos.id, { onDelete: "cascade" }),
+    actId: integer("act_id").notNull().references(() => acts.id, { onDelete: "cascade" }),
+    campaignPlayerId: integer("campaign_player_id")
+      .notNull()
+      .references(() => campaignPlayers.id, { onDelete: "cascade" }),
     cardId: text("card_id").notNull().references(() => cards.id),
     taggedById: integer("tagged_by_id").references(() => players.id),
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex("card_tags_unique").on(t.photoId, t.cardId), index("card_tags_card_idx").on(t.cardId)],
+  (t) => [
+    uniqueIndex("card_tags_unique").on(t.actId, t.campaignPlayerId, t.cardId),
+    index("card_tags_card_idx").on(t.cardId),
+  ],
 );
 
 /** Every change: who, when, before and after. */

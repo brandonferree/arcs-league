@@ -21,12 +21,13 @@ const upstream = [
   { id: "ARCS-F101A", name: "Steward Act I Setup", tags: ["Blighted Reach", "Setup", "Steward"], game: "arcs", product: "blightedreach" },
   { id: "ARCS-AID01A", name: "Imperial Council in Session", tags: ["Blighted Reach", "Imperial Council"], game: "arcs", product: "blightedreach" },
   { id: "ARCS-L01", name: "Tool-Priests", text: "z", tags: ["Base", "Lore"], game: "arcs", product: "arcsbasegame" },
+  { id: "ARCS-BC01", name: "Loyal Engineers", tags: ["Base", "Base Court", "Guild", "Material"], game: "arcs", product: "arcsbasegame" },
   { id: "ARCS-BAD", tags: ["Base"], game: "arcs" },
   { id: "ROOT-1", name: "Not ARCS", tags: ["A", "B"], game: "root" },
 ];
 
 describe("parseUpstream", () => {
-  it("keeps ARCS cards, drops setup cards and player aids, counts malformed records", () => {
+  it("keeps ARCS cards, drops setup cards, player aids and base court cards, counts malformed records", () => {
     const { cards, skipped } = parseUpstream(upstream);
     expect(cards.map((c) => c.id)).toEqual(["ARCS-FATE01", "ARCS-F103", "ARCS-L01"]);
     expect(skipped).toBe(1);
@@ -106,7 +107,7 @@ describe("pickerGroups", () => {
     const groups = pickerGroups(all, { id: 1, name: "Steward" }, 2);
     expect(groups.map((g) => [g.label, g.cards.map((c) => c.id)])).toEqual([
       ["Steward cards", ["F2", "F3", "L2"]],
-      ["Court cards", ["C2", "C1"]],
+      ["Court cards", ["C1"]],
       ["Lore", ["L1"]],
       ["Other fates' Guild and Vox cards", ["G1"]],
     ]);

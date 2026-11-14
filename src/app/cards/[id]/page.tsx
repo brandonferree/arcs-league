@@ -75,11 +75,11 @@ export default async function CardPage({ params }: { params: Params }) {
         <section className="panel" aria-labelledby="stats-h">
           <div className="panel__head">
             <h2 id="stats-h" className="panel__title">
-              From tagged photos
+              In players' tableaux
             </h2>
           </div>
           <div className="grid-kpi grid-kpi--2">
-            <Kpi label="Seen" value={String(card.stats.tagged)} note="tableau photos tagged with it" />
+            <Kpi label="Seen" value={String(card.stats.tagged)} note="tableaux holding it at the end of an act" />
             <Kpi
               label="Holders won"
               value={card.stats.holders ? formatPct(card.stats.wins / card.stats.holders) : "–"}
@@ -89,8 +89,8 @@ export default async function CardPage({ params }: { params: Params }) {
           {card.sightings.length ? (
             <ul className="sighting-list">
               {card.sightings.map((s) => (
-                <li key={s.photoId}>
-                  <Link href={`/campaigns/${s.campaignId}/photos/${s.photoId}`}>
+                <li key={`${s.campaignId}-${s.actNo}-${s.campaignPlayerId}`}>
+                  <Link href={`/campaigns/${s.campaignId}/tableau/${s.actNo}/${s.campaignPlayerId}`}>
                     {s.campaignTitle}, Act {ROMAN[s.actNo]}
                   </Link>{" "}
                   · {s.player}
@@ -100,7 +100,7 @@ export default async function CardPage({ params }: { params: Params }) {
             </ul>
           ) : (
             <p className="empty" style={{ marginTop: 14 }}>
-              Not tagged on any tableau photo yet.
+              Not in any recorded tableau yet.
             </p>
           )}
         </section>

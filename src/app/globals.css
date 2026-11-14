@@ -502,7 +502,8 @@ td.gold a { color: var(--gold); }
   border: 1px solid var(--line); border-radius: 8px; background: var(--panel-inset);
 }
 .photo-slot__frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-a.photo-slot__frame:hover { border-color: var(--border-cyan); }
+a.photo-slot__frame:hover, .photo-slot__link:hover .photo-slot__frame { border-color: var(--border-cyan); }
+.photo-slot__link { display: block; color: inherit; text-decoration: none; }
 .photo-slot__frame--empty {
   display: flex; align-items: center; justify-content: center;
   border-style: dashed; color: var(--muted); font-size: 13px;
@@ -534,8 +535,8 @@ a.photo-slot__frame:hover { border-color: var(--border-cyan); }
 .card-set__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
 .photo-slot__tags { overflow-wrap: anywhere; line-height: 1.5; }
 
-/* Photo page: the photo beside its tags and the picker. */
-.photo-page { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 22px; align-items: start; }
+/* Tableau page: the cards and picker beside the (optional) photo. */
+.photo-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; align-items: start; }
 .photo-page__photo img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
 @media (max-width: 860px) { .photo-page { grid-template-columns: minmax(0, 1fr); } }
 .tag-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }

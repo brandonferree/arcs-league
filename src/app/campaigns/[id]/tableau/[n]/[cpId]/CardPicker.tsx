@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useDeferredValue, useState, useTransition } from "react";
 import { cardImageUrl, type PickerGroup } from "@/lib/cards";
+import type { TableauRef } from "@/server/cards";
 import { addCardTagAction } from "./actions";
 
-/** Search and add cards seen on a tableau photo. The player's own fate cards come first. */
-export function CardPicker({ campaignId, photoId, groups }: { campaignId: number; photoId: number; groups: PickerGroup[] }) {
+/** Search and add cards to a player's tableau. The player's own fate cards come first. */
+export function CardPicker({ tableau, groups }: { tableau: TableauRef; groups: PickerGroup[] }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const q = useDeferredValue(query.trim().toLowerCase());
@@ -21,7 +22,7 @@ export function CardPicker({ campaignId, photoId, groups }: { campaignId: number
   async function add(cardId: string) {
     setBusy(cardId);
     setError(null);
-    const r = await addCardTagAction(campaignId, photoId, cardId);
+    const r = await addCardTagAction(tableau, cardId);
     if (!r.ok) setError(r.error);
     startTransition(() => {
       router.refresh();
@@ -60,7 +61,7 @@ export function CardPicker({ campaignId, photoId, groups }: { campaignId: number
                     className="picker__card"
                     disabled={busy !== null}
                     onClick={() => add(c.id)}
-                    aria-label={`Tag ${c.name}, ${c.type}${g.key !== "fate" && c.fate ? `, ${c.fate}` : ""}`}
+                    aria-label={`Add ${c.name}, ${c.type}${g.key !== "fate" && c.fate ? `, ${c.fate}` : ""}`}
                   >
                     <span className="picker__plus" aria-hidden="true">
                       {busy === c.id ? "…" : "+"}

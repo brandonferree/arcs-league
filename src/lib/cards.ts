@@ -33,9 +33,12 @@ export const upstreamCard = z
   .passthrough();
 export type UpstreamCard = z.infer<typeof upstreamCard>;
 
-/** Everything ARCS except setup cards and the player aids (AID…), per the spec. */
+/**
+ * Everything ARCS except setup cards and the player aids (AID…), per the spec,
+ * and the base game's court cards (BC…), which the league does not use (owner, 2026-11-14).
+ */
 export function isImportable(c: Pick<UpstreamCard, "id" | "tags" | "game">): boolean {
-  return c.game === "arcs" && !c.tags.includes("Setup") && !c.id.startsWith("ARCS-AID");
+  return c.game === "arcs" && !c.tags.includes("Setup") && !c.id.startsWith("ARCS-AID") && !c.id.startsWith("ARCS-BC");
 }
 
 /** Picks the ARCS cards out of the full cards.json; malformed records are counted, not fatal. */
@@ -193,7 +196,7 @@ export function cardTextPlain(text: string | null | undefined): string {
 }
 
 // ---------------------------------------------------------------------------
-// The tagging picker (spec section 4)
+// The tagging picker (spec section 4): the cards in a player's tableau at the end of an act
 
 export interface PickerCard {
   id: string;
@@ -213,14 +216,14 @@ export interface PickerGroup {
   cards: PickerCard[];
 }
 
-export const COURT_TYPES = ["Base Court", "Blighted Reach Court"] as const;
+export const COURT_TYPES = ["Blighted Reach Court"] as const;
 /** Fate cards that end up in the shared court, so any player can hold another fate's. */
 export const COURT_BOUND_FATE_TYPES = ["Guild", "Vox"] as const;
 /** Not tableau cards: the fate card sits beside the board and resolutions are read at the end of an act. */
 const NOT_ON_TABLEAU = new Set(["Fate", "Resolution"]);
 
 /**
- * Cards a tableau photo can be tagged with: the player's own fate cards first
+ * Cards a tableau can be tagged with: the player's own fate cards first
  * (that act's first), then court cards, Lore, and other fates' Guild and Vox
  * cards (which enter the court and can be secured by anyone).
  */

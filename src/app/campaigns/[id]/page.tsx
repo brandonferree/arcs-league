@@ -9,7 +9,7 @@ import { formatDate, formatDateTime, joinNames, ROMAN } from "@/lib/format";
 import { canEditAct, canManagePhotos, canRecordAct, canViewPhotos, editWindowEndsAt } from "@/lib/permissions";
 import { progressionSteps, type ActNumber } from "@/lib/rules";
 import { campaignHistory, getCampaign } from "@/server/campaigns";
-import { tagsForPhotos } from "@/server/cards";
+import { campaignTags } from "@/server/cards";
 import { expectedPhotos, listCampaignPhotos } from "@/server/photos";
 import { getSession, toActor } from "@/server/session";
 import { deleteCampaignAction, reopenCampaignAction, voidCampaignAction } from "../actions";
@@ -44,7 +44,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const guildId = process.env.DISCORD_GUILD_ID;
   const photos = await listCampaignPhotos(await getDb(), c.id);
   const canViewPhotosHere = canViewPhotos(!!session, c.photosPublic);
-  const photoTags = canViewPhotosHere ? await tagsForPhotos(await getDb(), photos.map((p) => p.id)) : new Map();
+  const tableauCards = await campaignTags(await getDb(), c.id);
 
   return (
     <>
@@ -229,7 +229,8 @@ export default async function CampaignPage({ params, searchParams }: { params: P
       <PhotosPanel
         c={c}
         photos={canViewPhotosHere ? photos : []}
-        tags={photoTags}
+        tags={tableauCards}
+        signedIn={!!session}
         canView={canViewPhotosHere}
         canManage={canManagePhotos(actor, c.access)}
       />

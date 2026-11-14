@@ -39,7 +39,7 @@ export default async function CardsPage({ searchParams }: { searchParams: SP }) 
           <a href="https://cards.buriedgiant.com/" rel="noopener">
             Buried Giant Studios&rsquo; card database
           </a>{" "}
-          with their permission. &ldquo;Seen&rdquo; counts tableau photos where members tagged the card; each card&rsquo;s
+          with their permission. &ldquo;Seen&rdquo; counts players&rsquo; tableaux holding the card at the end of an act; each card&rsquo;s
           page shows how its holders did.
         </p>
       </div>

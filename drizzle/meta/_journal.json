@@ -36,6 +36,20 @@
       "when": 1794676815422,
       "tag": "0004_card_images",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794678895806,
+      "tag": "0005_tableau_tags_add",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794678899513,
+      "tag": "0006_tableau_tags_finish",
+      "breakpoints": true
     }
   ]
 }

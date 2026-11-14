@@ -2,13 +2,14 @@ import Link from "next/link";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { ROMAN } from "@/lib/format";
 import type { CampaignDetail } from "@/server/campaigns";
-import type { PhotoTag } from "@/server/cards";
+import { tableauKey, type CardTag } from "@/server/cards";
 import type { PhotoView } from "@/server/photos";
 import { deletePhotoAction, setPhotosPublicAction } from "../actions";
 
 /**
- * Act photos on the campaign page: per act, the board and each player's tableau.
- * Members-only unless the campaign's photos are switched public.
+ * Per act: the board photo and each player's tableau, meaning the cards they
+ * held at the end of the act (anyone can see these) and an optional photo
+ * (members only unless the campaign's photos are switched public).
  */
 export function PhotosPanel({
   c,
@@ -16,22 +17,24 @@ export function PhotosPanel({
   tags,
   canView,
   canManage,
+  signedIn,
 }: {
   c: CampaignDetail;
   photos: PhotoView[];
-  /** Card tags per photo id. */
-  tags: Map<number, PhotoTag[]>;
+  /** Cards per tableau, keyed by tableauKey(actId, campaignPlayerId). */
+  tags: Map<string, CardTag[]>;
   canView: boolean;
   canManage: boolean;
+  signedIn: boolean;
 }) {
   return (
     <section className="panel" id="photos" aria-labelledby="photos-h">
       <div className="panel__head">
         <h2 id="photos-h" className="panel__title">
-          Photos
+          Tableaux and photos
         </h2>
         <div className="actions small">
-          <span className="muted">{c.photosPublic ? "Public: anyone can see these" : "Members only"}</span>
+          <span className="muted">Photos: {c.photosPublic ? "public" : "members only"}</span>
           {canManage ? (
             <form action={setPhotosPublicAction}>
               <input type="hidden" name="campaignId" value={c.id} />
@@ -44,21 +47,20 @@ export function PhotosPanel({
         </div>
       </div>
 
-      {!canView ? (
-        <p className="empty">
-          Photos are for signed-in members. <Link href={`/sign-in?next=/campaigns/${c.id}%23photos`}>Sign in</Link> to
-          see them.
-        </p>
-      ) : c.acts.length === 0 ? (
-        <p className="empty">Photos can be added once an act is recorded.</p>
+      {c.acts.length === 0 ? (
+        <p className="empty">Cards and photos can be added once an act is recorded.</p>
       ) : (
         <div className="photo-acts">
-          {canManage ? (
-            <p className="small muted" style={{ margin: 0 }}>
-              One photo of the board and one of each player&rsquo;s tableau, per act. Photos are shrunk on your device
-              before upload, which also removes location data.
-            </p>
-          ) : null}
+          <p className="small muted" style={{ margin: 0 }}>
+            Add the cards each player held at the end of each act. Photos of the board and tableaux are welcome but
+            optional{canManage ? "; they are shrunk on your device before upload, which also removes location data" : ""}.
+            {!canView ? (
+              <>
+                {" "}
+                <Link href={`/sign-in?next=/campaigns/${c.id}%23photos`}>Sign in</Link> to see the photos.
+              </>
+            ) : null}
+          </p>
           {c.acts.map((a) => {
             const slots = [
               { key: "board", slot: "board" as const, label: "Board", photo: photos.find((p) => p.actId === a.id && p.campaignPlayerId === null) },
@@ -75,33 +77,63 @@ export function PhotosPanel({
                 <ul className="photo-grid">
                   {slots.map((s) => {
                     const what = s.slot === "board" ? `Act ${ROMAN[a.actNo]} board` : `Act ${ROMAN[a.actNo]}, ${s.label}'s tableau`;
+                    const href =
+                      s.slot === "board"
+                        ? s.photo
+                          ? `/campaigns/${c.id}/photos/${s.photo.id}`
+                          : null
+                        : `/campaigns/${c.id}/tableau/${a.actNo}/${s.slot}`;
+                    const held = s.slot === "board" ? [] : (tags.get(tableauKey(a.id, s.slot)) ?? []);
+                    const frame = !s.photo ? (
+                      <span className="photo-slot__frame photo-slot__frame--empty">No photo</span>
+                    ) : canView ? (
+                      <span className="photo-slot__frame">
+                        <img src={`/api/photos/${s.photo.id}/thumb`} alt={what} loading="lazy" decoding="async" />
+                      </span>
+                    ) : (
+                      <span className="photo-slot__frame photo-slot__frame--empty">Photo for members</span>
+                    );
                     return (
                       <li key={s.key} className="photo-slot">
                         <figure className="photo-slot__figure">
-                          {s.photo ? (
-                            <Link href={`/campaigns/${c.id}/photos/${s.photo.id}`} className="photo-slot__frame">
-                              <img src={`/api/photos/${s.photo.id}/thumb`} alt={what} loading="lazy" decoding="async" />
+                          {href ? (
+                            <Link href={href} className="photo-slot__link" aria-label={what}>
+                              {frame}
                             </Link>
                           ) : (
-                            <div className="photo-slot__frame photo-slot__frame--empty">No photo</div>
+                            frame
                           )}
                           <figcaption>
                             {s.slot === "board" ? "Board" : <>{s.label}&rsquo;s tableau</>}
-                            {s.photo?.uploadedBy ? <span className="muted"> · by {s.photo.uploadedBy}</span> : null}
+                            {s.photo?.uploadedBy && canView ? <span className="muted"> · photo by {s.photo.uploadedBy}</span> : null}
                           </figcaption>
                         </figure>
-                        {s.photo && s.slot !== "board" ? (
+                        {s.slot !== "board" ? (
                           <div className="photo-slot__tags small">
-                            {(tags.get(s.photo.id) ?? []).map((t, i) => (
-                              <span key={t.tagId}>
-                                {i > 0 ? ", " : ""}
-                                <Link href={`/cards/${t.cardId}`}>{t.name}</Link>
-                              </span>
-                            ))}
-                            {(tags.get(s.photo.id) ?? []).length ? " · " : ""}
-                            <Link href={`/campaigns/${c.id}/photos/${s.photo.id}`} className="muted">
-                              {(tags.get(s.photo.id) ?? []).length ? "Tag more" : "Tag cards"}
-                            </Link>
+                            {held.length ? (
+                              <>
+                                {held.map((t, i) => (
+                                  <span key={t.tagId}>
+                                    {i > 0 ? ", " : ""}
+                                    <Link href={`/cards/${t.cardId}`}>{t.name}</Link>
+                                  </span>
+                                ))}
+                                {signedIn ? (
+                                  <>
+                                    {" · "}
+                                    <Link href={href!} className="muted">
+                                      Edit cards
+                                    </Link>
+                                  </>
+                                ) : null}
+                              </>
+                            ) : signedIn ? (
+                              <Link href={href!} className="btn btn--small btn--quiet">
+                                Add cards
+                              </Link>
+                            ) : (
+                              <span className="muted">No cards added</span>
+                            )}
                           </div>
                         ) : null}
                         {canManage ? (

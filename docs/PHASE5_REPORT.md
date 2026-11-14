@@ -12,6 +12,11 @@ Built 2026-11-14 at the owner's request. It first shipped text-only (8dd491a); t
 - Replacing a tableau photo keeps its tags. All tag changes are audit-logged.
 - **Cards** in the main navigation; the footer credit now links to Buried Giant's card site.
 
+## Changed after launch (owner, 2026-11-14)
+
+- **A photo is no longer needed to record cards.** Cards belong to a player's tableau for an act (`card_tags.act_id` + `campaign_player_id`), not to a photo. Each player's slot on the campaign page has **Add cards**, which opens `/campaigns/<id>/tableau/<act>/<player>`: the cards held, the picker and the photo if there is one. Old tableau photo links redirect there; replacing or removing a photo keeps the cards. Migration `0005` moved existing tags from their photos.
+- **Base game court cards (`ARCS-BC01`–`31`) dropped.** The import skips them, and migration `0005` hides the ones already imported (kept, not deleted, so any tags on them survive). The picker's court group is Blighted Reach court cards only.
+
 ## Decisions made (owner to confirm)
 
 - **Other fates' Guild and Vox cards are taggable** as well as the spec's list (court, Lore, the player's own fate cards): those cards enter the shared court, so any player can end up holding one.

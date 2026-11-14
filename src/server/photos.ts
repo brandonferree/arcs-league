@@ -8,7 +8,7 @@
  */
 import { and, asc, eq, isNull } from "drizzle-orm";
 import type { DB, DbOrTx } from "@/db";
-import { acts, campaigns, cardTags, photos, players } from "@/db/schema";
+import { acts, campaigns, photos, players } from "@/db/schema";
 import { canManagePhotos, type Actor } from "@/lib/permissions";
 import type { ActNumber } from "@/lib/rules";
 import { audit, getCampaign, NotFoundError, PermissionError, RuleError } from "./campaigns";
@@ -116,13 +116,6 @@ export async function savePhoto(db: DB, store: PhotoStore, actor: Actor, input: 
   try {
     id = await db.transaction(async (tx) => {
       const [old] = await tx.select().from(photos).where(slotWhere(act.id, input.slot));
-      // A replacement shows the same tableau, so its card tags carry over.
-      const keptTags = old
-        ? await tx
-            .select({ cardId: cardTags.cardId, taggedById: cardTags.taggedById, createdAt: cardTags.createdAt })
-            .from(cardTags)
-            .where(eq(cardTags.photoId, old.id))
-        : [];
       if (old) {
         await tx.delete(photos).where(eq(photos.id, old.id));
         replaced = { fullKey: old.fullKey, thumbKey: old.thumbKey };
@@ -140,7 +133,6 @@ export async function savePhoto(db: DB, store: PhotoStore, actor: Actor, input: 
           uploadedById: actor.playerId,
         })
         .returning({ id: photos.id });
-      if (keptTags.length) await tx.insert(cardTags).values(keptTags.map((t) => ({ ...t, photoId: row.id })));
       await audit(tx, actor, {
         action: old ? "photo.replace" : "photo.add",
         entityType: "photo",
@@ -235,6 +227,26 @@ export async function photoForServing(db: DbOrTx, photoId: number) {
     .innerJoin(campaigns, eq(campaigns.id, acts.campaignId))
     .where(eq(photos.id, photoId));
   return row ?? null;
+}
+
+/** Where a photo belongs, for its page. */
+export async function photoInfo(db: DbOrTx, photoId: number) {
+  const [row] = await db
+    .select({
+      id: photos.id,
+      campaignId: acts.campaignId,
+      campaignTitle: campaigns.title,
+      photosPublic: campaigns.photosPublic,
+      actNo: acts.actNo,
+      campaignPlayerId: photos.campaignPlayerId,
+      width: photos.width,
+      height: photos.height,
+    })
+    .from(photos)
+    .innerJoin(acts, eq(acts.id, photos.actId))
+    .innerJoin(campaigns, eq(campaigns.id, acts.campaignId))
+    .where(eq(photos.id, photoId));
+  return row ? { ...row, actNo: row.actNo as ActNumber } : null;
 }
 
 /** Every stored file of a campaign's photos, to delete along with the campaign. */

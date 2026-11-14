@@ -13,17 +13,18 @@ import {
   copyCardImages,
   fateCards,
   fetchUpstreamCards,
+  campaignTags,
   getCard,
+  getTableau,
   importCards,
   lastCardImport,
   listCards,
-  photoForTagging,
   previewCardImport,
   removeCardTag,
-  tagsForPhotos,
+  tableauKey,
 } from "./cards";
 import { memoryPhotoStore } from "./photo-store";
-import { savePhoto } from "./photos";
+import { deletePhoto, savePhoto } from "./photos";
 
 const RAW: Record<string, unknown>[] = [
   { id: "ARCS-FATE01", name: "Steward", text: "**YOUR PATH**", image: "https://cardcdn.buriedgiant.com/cards/arcs/en-US/FATE01.webp", tags: ["Blighted Reach", "Fate", "Steward"], meta: { act: 1, complexity: 2 }, game: "arcs", product: "blightedreach" },
@@ -102,7 +103,7 @@ describe("card import", () => {
   });
 });
 
-describe("card tags", () => {
+describe("tableau cards", () => {
   async function setup() {
     await importCards(db, actor("Mod", true), upstream());
     const fateId = Object.fromEntries((await db.select().from(fates)).map((f) => [f.name, f.id]));
@@ -114,57 +115,62 @@ describe("card tags", () => {
       playedOn: "2026-11-01",
       results: c.players.map((p, i) => ({ campaignPlayerId: p.cpId, fateId: fateId[["Steward", "Founder", "Magnate"][i]], score: 5, success: true })),
     });
+    const emma = { campaignId: id, actNo: 1, campaignPlayerId: c.players[0].cpId };
     const store = memoryPhotoStore();
-    const photo = (slot: "board" | number) =>
-      savePhoto(db, store, actor("Emma"), { campaignId: id, actNo: 1, slot, full: fakeJpeg(1600, 1200), thumb: fakeJpeg(400, 300) });
-    const emmaPhoto = await photo(c.players[0].cpId);
-    const boardPhoto = await photo("board");
-    return { id, c, store, photo, emmaPhoto, boardPhoto };
+    const photo = () =>
+      savePhoto(db, store, actor("Emma"), { campaignId: id, actNo: 1, slot: emma.campaignPlayerId, full: fakeJpeg(1600, 1200), thumb: fakeJpeg(400, 300) });
+    const held = async () => {
+      const act = (await getCampaign(db, id))!.acts[0];
+      return (await campaignTags(db, id)).get(tableauKey(act.id, emma.campaignPlayerId)) ?? [];
+    };
+    return { id, c, emma, photo, held };
   }
 
-  it("knows whose tableau a photo is and their fate that act", async () => {
-    const { emmaPhoto } = await setup();
-    const p = await photoForTagging(db, emmaPhoto);
-    expect(p?.player?.name).toBe("Emma");
-    expect(p?.fate?.name).toBe("Steward");
+  it("knows whose tableau it is, their fate that act, and whether there is a photo", async () => {
+    const { id, emma, photo } = await setup();
+    const t = await getTableau(db, id, 1, emma.campaignPlayerId);
+    expect([t?.player.name, t?.fate?.name, t?.photo]).toEqual(["Emma", "Steward", null]);
+    await photo();
+    expect((await getTableau(db, id, 1, emma.campaignPlayerId))?.photo).not.toBeNull();
+    expect(await getTableau(db, id, 2, emma.campaignPlayerId)).toBeNull(); // Act II not recorded
   });
 
-  it("lets any member tag a tableau photo once per card, and audits it", async () => {
-    const { emmaPhoto, boardPhoto } = await setup();
-    await addCardTag(db, actor("Outsider"), emmaPhoto, "ARCS-F103");
-    await addCardTag(db, actor("Chris"), emmaPhoto, "ARCS-F103"); // duplicate: ignored
-    await addCardTag(db, actor("Chris"), emmaPhoto, "ARCS-L01");
-    const tags = (await tagsForPhotos(db, [emmaPhoto])).get(emmaPhoto)!;
-    expect(tags.map((t) => [t.name, t.taggedBy])).toEqual([
+  it("lets any member add cards without a photo, once per card, and audits it", async () => {
+    const { emma, held } = await setup();
+    await addCardTag(db, actor("Outsider"), emma, "ARCS-F103");
+    await addCardTag(db, actor("Chris"), emma, "ARCS-F103"); // already there: ignored
+    await addCardTag(db, actor("Chris"), emma, "ARCS-L01");
+    expect((await held()).map((t) => [t.name, t.taggedBy])).toEqual([
       ["Dealmakers", "Outsider"],
       ["Tool-Priests", "Chris"],
     ]);
-    expect(await addCardTag(db, null, emmaPhoto, "ARCS-L01").then(() => null, (e) => e)).toBeInstanceOf(PermissionError);
-    expect(await addCardTag(db, actor("Emma"), boardPhoto, "ARCS-L01").then(() => null, (e) => e)).toBeInstanceOf(RuleError);
-    expect(await addCardTag(db, actor("Emma"), emmaPhoto, "ARCS-NOPE").then(() => null, (e) => e)).toBeInstanceOf(NotFoundError);
+    expect(await addCardTag(db, null, emma, "ARCS-L01").then(() => null, (e) => e)).toBeInstanceOf(PermissionError);
+    expect(await addCardTag(db, actor("Emma"), { ...emma, actNo: 2 }, "ARCS-L01").then(() => null, (e) => e)).toBeInstanceOf(NotFoundError);
+    expect(await addCardTag(db, actor("Emma"), emma, "ARCS-NOPE").then(() => null, (e) => e)).toBeInstanceOf(NotFoundError);
     expect(await db.select().from(auditLog).where(eq(auditLog.action, "card_tag.add"))).toHaveLength(2);
   });
 
-  it("lets the tagger, participants and moderators remove tags, nobody else", async () => {
-    const { emmaPhoto } = await setup();
-    await addCardTag(db, actor("Outsider"), emmaPhoto, "ARCS-F103");
-    await addCardTag(db, actor("Emma"), emmaPhoto, "ARCS-L01");
-    const [a, b] = (await tagsForPhotos(db, [emmaPhoto])).get(emmaPhoto)!;
+  it("lets the adder, participants and moderators remove cards, nobody else", async () => {
+    const { emma, held } = await setup();
+    await addCardTag(db, actor("Outsider"), emma, "ARCS-F103");
+    await addCardTag(db, actor("Emma"), emma, "ARCS-L01");
+    const [a, b] = await held();
     expect(await removeCardTag(db, actor("Outsider"), b.tagId).then(() => null, (e) => e)).toBeInstanceOf(PermissionError);
-    await removeCardTag(db, actor("Outsider"), a.tagId);
+    expect(await removeCardTag(db, actor("Outsider"), a.tagId)).toEqual(emma);
     await removeCardTag(db, actor("Mark"), b.tagId);
     expect(await db.select().from(cardTags)).toEqual([]);
   });
 
-  it("counts sightings and wins per card, and keeps tags when a photo is replaced", async () => {
-    const { emmaPhoto, c, photo } = await setup();
-    await addCardTag(db, actor("Chris"), emmaPhoto, "ARCS-F103");
-    const replaced = await photo(c.players[0].cpId);
-    expect((await tagsForPhotos(db, [replaced])).get(replaced)?.map((t) => t.cardId)).toEqual(["ARCS-F103"]);
+  it("keeps the cards when the photo is replaced or removed, and counts them per card", async () => {
+    const { emma, photo, held } = await setup();
+    await photo();
+    await addCardTag(db, actor("Chris"), emma, "ARCS-F103");
+    const second = await photo(); // replace
+    await deletePhoto(db, memoryPhotoStore(), actor("Emma"), second);
+    expect((await held()).map((t) => t.cardId)).toEqual(["ARCS-F103"]);
     const card = await getCard(db, "ARCS-F103");
     expect(card?.stats).toEqual({ tagged: 1, holders: 0, wins: 0 }); // campaign not closed yet
-    expect(card?.sightings.map((s) => [s.player, s.actNo])).toEqual([["Emma", 1]]);
-    expect((await db.select().from(cards).where(eq(cards.id, "ARCS-F103")))[0].fateId).not.toBeNull();
+    expect(card?.sightings.map((s) => [s.player, s.actNo, s.campaignPlayerId])).toEqual([["Emma", 1, emma.campaignPlayerId]]);
   });
 });
 

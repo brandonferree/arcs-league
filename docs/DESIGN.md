@@ -68,7 +68,7 @@ Per act:
 
 Per campaign: title (auto-generated if blank), season tag (optional), explicit winner plus override reason.
 
-**Card tagging.** Cards are not typed in at submission. Later, any signed-in member can open a tableau photo and tag the cards visible in it. Taggable cards: court cards (base and Blighted Reach), Lore, and the cards of the fate that player was on in that act. The picker should offer that fate's own cards first.
+**Card tagging.** Cards are not typed in at submission. Later, any signed-in member can open a player's tableau for an act and add the cards that player held at the end of it. A tableau photo helps but is not required (owner, 2026-11-14). Taggable cards: court cards (base and Blighted Reach), Lore, and the cards of the fate that player was on in that act. The picker should offer that fate's own cards first.
 
 **Stalled.** A campaign with no new act for 60 days is flagged stalled and excluded from stats. A moderator can void or reopen it. In-progress and stalled campaigns never count in stats or the API.
 
@@ -126,7 +126,7 @@ Rules for using it:
 
 - **Copy, do not hotlink.** Import the data into Postgres and store resized copies of the images (thumbnail and full) in Blob.
 - **Updates are manual.** A moderator presses "check for updates", sees a diff, and approves it. Never sync automatically; joke text was briefly committed upstream in October 2026.
-- **Import everything except** cards tagged Setup and the player aids (`AID…`).
+- **Import everything except** cards tagged Setup, the player aids (`AID…`) and the base game's court cards (`BC…`, dropped by the owner 2026-11-14).
 - **Credit** Buried Giant in the footer and link each card back to their database. State that this is an unofficial fan site.
 - There is no cropped fate art or fate icon upstream, only full card scans.
 

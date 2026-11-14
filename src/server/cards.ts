@@ -226,8 +226,11 @@ export async function lastCardImport(db: DbOrTx): Promise<ImportRecord | null> {
 // ---------------------------------------------------------------------------
 // Reference
 
+/** Image version (copy time) or null until the image is copied; part of the image URL. */
+const imageV = () => sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end`;
+
 export interface CardStats {
-  /** Tableau photos tagged with the card, in campaigns that are not void. */
+  /** Tableaux (a player at the end of an act) holding the card, in campaigns that are not void. */
   tagged: number;
   /** Players in closed campaigns with the card tagged in any act. */
   holders: number;
@@ -241,14 +244,13 @@ async function statsByCard(db: DbOrTx, cardIds?: string[]): Promise<Map<string, 
   const rows = await db
     .select({
       cardId: cardTags.cardId,
-      tagged: sql<number>`count(distinct ${cardTags.photoId})`.mapWith(Number),
+      tagged: sql<number>`count(*)`.mapWith(Number),
       holders: sql<number>`count(distinct ${campaignPlayers.id}) filter (where ${campaigns.status} = 'closed')`.mapWith(Number),
       wins: sql<number>`count(distinct ${campaignPlayers.id}) filter (where ${campaigns.status} = 'closed' and ${campaignPlayers.isWinner})`.mapWith(Number),
     })
     .from(cardTags)
-    .innerJoin(photos, eq(photos.id, cardTags.photoId))
-    .innerJoin(campaignPlayers, eq(campaignPlayers.id, photos.campaignPlayerId))
-    .innerJoin(acts, eq(acts.id, photos.actId))
+    .innerJoin(campaignPlayers, eq(campaignPlayers.id, cardTags.campaignPlayerId))
+    .innerJoin(acts, eq(acts.id, cardTags.actId))
     .innerJoin(campaigns, eq(campaigns.id, acts.campaignId))
     .where(and(sql`${campaigns.status} <> 'void'`, cardIds ? inArray(cardTags.cardId, cardIds) : undefined))
     .groupBy(cardTags.cardId);
@@ -295,7 +297,7 @@ export async function listCards(db: DbOrTx, f: CardListFilters = {}): Promise<Ca
       keys: cards.keys,
       fateName: fates.name,
       fateTier: fates.tier,
-      imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end`,
+      imageV: imageV(),
     })
     .from(cards)
     .leftJoin(fates, eq(fates.id, cards.fateId))
@@ -331,8 +333,8 @@ export async function cardCount(db: DbOrTx): Promise<number> {
 }
 
 export interface CardSighting {
-  photoId: number;
   campaignId: number;
+  campaignPlayerId: number;
   campaignTitle: string;
   actNo: ActNumber;
   player: string;
@@ -342,7 +344,7 @@ export interface CardSighting {
 
 export async function getCard(db: DbOrTx, id: string) {
   const [row] = await db
-    .select({ card: cards, fateName: fates.name, fateTier: fates.tier, imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end` })
+    .select({ card: cards, fateName: fates.name, fateTier: fates.tier, imageV: imageV() })
     .from(cards)
     .leftJoin(fates, eq(fates.id, cards.fateId))
     .where(eq(cards.id, id));
@@ -352,8 +354,8 @@ export async function getCard(db: DbOrTx, id: string) {
     : null;
   const sightings = await db
     .select({
-      photoId: photos.id,
       campaignId: campaigns.id,
+      campaignPlayerId: campaignPlayers.id,
       campaignTitle: campaigns.title,
       actNo: acts.actNo,
       player: players.displayName,
@@ -361,10 +363,9 @@ export async function getCard(db: DbOrTx, id: string) {
       status: campaigns.status,
     })
     .from(cardTags)
-    .innerJoin(photos, eq(photos.id, cardTags.photoId))
-    .innerJoin(acts, eq(acts.id, photos.actId))
+    .innerJoin(acts, eq(acts.id, cardTags.actId))
     .innerJoin(campaigns, eq(campaigns.id, acts.campaignId))
-    .innerJoin(campaignPlayers, eq(campaignPlayers.id, photos.campaignPlayerId))
+    .innerJoin(campaignPlayers, eq(campaignPlayers.id, cardTags.campaignPlayerId))
     .innerJoin(players, eq(players.id, campaignPlayers.playerId))
     .where(and(eq(cardTags.cardId, id), sql`${campaigns.status} <> 'void'`))
     .orderBy(desc(campaigns.id), asc(acts.actNo));
@@ -381,16 +382,16 @@ export async function getCard(db: DbOrTx, id: string) {
 /** A fate's own cards (its fate card included), for the fate page. */
 export async function fateCards(db: DbOrTx, fateId: number) {
   return db
-    .select({ id: cards.id, name: cards.name, type: cards.type, act: cards.act, text: cards.text, keys: cards.keys, imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end` })
+    .select({ id: cards.id, name: cards.name, type: cards.type, act: cards.act, text: cards.text, keys: cards.keys, imageV: imageV() })
     .from(cards)
     .where(and(eq(cards.fateId, fateId), isNull(cards.removedAt)))
     .orderBy(asc(cards.act), asc(cards.id));
 }
 
 // ---------------------------------------------------------------------------
-// Tags
+// Tags: the cards in a player's tableau at the end of an act
 
-export interface PhotoTag {
+export interface CardTag {
   tagId: number;
   cardId: string;
   name: string;
@@ -400,107 +401,109 @@ export interface PhotoTag {
   imageV: number | null;
 }
 
-export async function tagsForPhotos(db: DbOrTx, photoIds: number[]): Promise<Map<number, PhotoTag[]>> {
-  const m = new Map<number, PhotoTag[]>();
-  if (!photoIds.length) return m;
+/** Key for a tableau: one player at the end of one act. */
+export const tableauKey = (actId: number, campaignPlayerId: number) => `${actId}:${campaignPlayerId}`;
+
+/** Every tableau's cards in a campaign, keyed by tableauKey(actId, campaignPlayerId). */
+export async function campaignTags(db: DbOrTx, campaignId: number): Promise<Map<string, CardTag[]>> {
   const rows = await db
     .select({
-      photoId: cardTags.photoId,
+      actId: cardTags.actId,
+      campaignPlayerId: cardTags.campaignPlayerId,
       tagId: cardTags.id,
       cardId: cardTags.cardId,
       name: cards.name,
       type: cards.type,
       taggedById: cardTags.taggedById,
       taggedBy: players.displayName,
-      imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end`,
+      imageV: imageV(),
     })
     .from(cardTags)
+    .innerJoin(acts, eq(acts.id, cardTags.actId))
     .innerJoin(cards, eq(cards.id, cardTags.cardId))
     .leftJoin(players, eq(players.id, cardTags.taggedById))
-    .where(inArray(cardTags.photoId, photoIds))
-    .orderBy(asc(cards.name));
-  for (const { photoId, ...t } of rows) m.set(photoId, [...(m.get(photoId) ?? []), t]);
+    .where(eq(acts.campaignId, campaignId))
+    .orderBy(asc(cards.type), asc(cards.name));
+  const m = new Map<string, CardTag[]>();
+  for (const { actId, campaignPlayerId, ...t } of rows) {
+    const k = tableauKey(actId, campaignPlayerId);
+    m.set(k, [...(m.get(k) ?? []), t]);
+  }
   return m;
 }
 
 /** Every current card, slimmed for the picker. */
 export async function pickerCards(db: DbOrTx): Promise<PickerCard[]> {
   return db
-    .select({ id: cards.id, name: cards.name, type: cards.type, fateId: cards.fateId, fate: fates.name, act: cards.act, imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end` })
+    .select({ id: cards.id, name: cards.name, type: cards.type, fateId: cards.fateId, fate: fates.name, act: cards.act, imageV: imageV() })
     .from(cards)
     .leftJoin(fates, eq(fates.id, cards.fateId))
     .where(isNull(cards.removedAt));
 }
 
-/** A photo with what the tagging page needs: its campaign, act, whose tableau, and that player's fate in that act. */
-export async function photoForTagging(db: DbOrTx, photoId: number) {
-  const [row] = await db
-    .select({
-      id: photos.id,
-      actId: photos.actId,
-      campaignPlayerId: photos.campaignPlayerId,
-      width: photos.width,
-      height: photos.height,
-      campaignId: acts.campaignId,
-      actNo: acts.actNo,
-    })
-    .from(photos)
-    .innerJoin(acts, eq(acts.id, photos.actId))
-    .where(eq(photos.id, photoId));
-  if (!row) return null;
-  const c = await getCampaign(db, row.campaignId);
+/** A tableau: the campaign, the recorded act, whose it is, their fate that act, and the tableau photo if there is one. */
+export async function getTableau(db: DbOrTx, campaignId: number, actNo: number, campaignPlayerId: number) {
+  const c = await getCampaign(db, campaignId);
   if (!c) return null;
-  const player = row.campaignPlayerId ? (c.players.find((p) => p.cpId === row.campaignPlayerId) ?? null) : null;
-  let fate: { id: number; name: string; tier: Tier } | null = null;
-  if (row.campaignPlayerId) {
-    const [r] = await db
-      .select({ id: fates.id, name: fates.name, tier: fates.tier })
-      .from(actResults)
-      .innerJoin(fates, eq(fates.id, actResults.fateId))
-      .where(and(eq(actResults.actId, row.actId), eq(actResults.campaignPlayerId, row.campaignPlayerId)));
-    fate = r ?? null;
-  }
-  return { ...row, actNo: row.actNo as ActNumber, campaign: c, player, fate };
+  const act = c.acts.find((a) => a.actNo === actNo);
+  const player = c.players.find((p) => p.cpId === campaignPlayerId);
+  if (!act || !player) return null;
+  const [fate] = await db
+    .select({ id: fates.id, name: fates.name, tier: fates.tier })
+    .from(actResults)
+    .innerJoin(fates, eq(fates.id, actResults.fateId))
+    .where(and(eq(actResults.actId, act.id), eq(actResults.campaignPlayerId, campaignPlayerId)));
+  const [photo] = await db
+    .select({ id: photos.id, width: photos.width, height: photos.height })
+    .from(photos)
+    .where(and(eq(photos.actId, act.id), eq(photos.campaignPlayerId, campaignPlayerId)));
+  return { campaign: c, act, actNo: act.actNo, player, fate: fate ?? null, photo: photo ?? null };
 }
 
-export async function addCardTag(db: DB, actor: Actor | null, photoId: number, cardId: string): Promise<void> {
-  if (!canTagCards(actor) || !actor) throw new PermissionError("Sign in with Discord to tag cards.");
-  const p = await photoForTagging(db, photoId);
-  if (!p) throw new NotFoundError("Photo not found.");
-  if (!p.campaignPlayerId) throw new RuleError(["Cards are tagged on tableau photos, not the board photo."]);
+export interface TableauRef {
+  campaignId: number;
+  actNo: number;
+  campaignPlayerId: number;
+}
+
+export async function addCardTag(db: DB, actor: Actor | null, ref: TableauRef, cardId: string): Promise<void> {
+  if (!canTagCards(actor) || !actor) throw new PermissionError("Sign in with Discord to add cards.");
+  const t = await getTableau(db, ref.campaignId, ref.actNo, ref.campaignPlayerId);
+  if (!t) throw new NotFoundError("That act or player is not in this campaign.");
+  if (t.campaign.status === "void" && !actor.isModerator) throw new PermissionError("This campaign is void.");
   const [card] = await db.select({ id: cards.id, name: cards.name, removedAt: cards.removedAt }).from(cards).where(eq(cards.id, cardId));
   if (!card || card.removedAt) throw new NotFoundError("Card not found.");
   await db.transaction(async (tx) => {
     const inserted = await tx
       .insert(cardTags)
-      .values({ photoId, cardId, taggedById: actor.playerId })
+      .values({ actId: t.act.id, campaignPlayerId: ref.campaignPlayerId, cardId, taggedById: actor.playerId })
       .onConflictDoNothing()
       .returning({ id: cardTags.id });
-    if (!inserted.length) return; // already tagged
+    if (!inserted.length) return; // already there
     await audit(tx, actor, {
       action: "card_tag.add",
       entityType: "card_tag",
       entityId: inserted[0].id,
-      campaignId: p.campaign.id,
-      after: { photoId, act: p.actNo, of: p.player?.name ?? null, card: cardId, name: card.name },
+      campaignId: t.campaign.id,
+      after: { act: t.actNo, of: t.player.name, card: cardId, name: card.name },
     });
   });
 }
 
-export async function removeCardTag(db: DB, actor: Actor | null, tagId: number): Promise<{ campaignId: number; photoId: number }> {
+export async function removeCardTag(db: DB, actor: Actor | null, tagId: number): Promise<TableauRef> {
   const [t] = await db
-    .select({ tag: cardTags, campaignId: acts.campaignId, cardName: cards.name })
+    .select({ tag: cardTags, campaignId: acts.campaignId, actNo: acts.actNo, cardName: cards.name })
     .from(cardTags)
-    .innerJoin(photos, eq(photos.id, cardTags.photoId))
-    .innerJoin(acts, eq(acts.id, photos.actId))
+    .innerJoin(acts, eq(acts.id, cardTags.actId))
     .innerJoin(cards, eq(cards.id, cardTags.cardId))
     .where(eq(cardTags.id, tagId));
-  if (!t) throw new NotFoundError("Tag not found.");
+  if (!t) throw new NotFoundError("That card is not in the tableau any more.");
   const c = await getCampaign(db, t.campaignId);
   if (!c) throw new NotFoundError("Campaign not found.");
   if (!canRemoveCardTag(actor, t.tag.taggedById, c.access) || !actor) {
-    throw new PermissionError("Only whoever added a tag, the campaign's players or a moderator can remove it.");
+    throw new PermissionError("Only whoever added a card, the campaign's players or a moderator can remove it.");
   }
+  const of = c.players.find((p) => p.cpId === t.tag.campaignPlayerId)?.name ?? null;
   await db.transaction(async (tx) => {
     await tx.delete(cardTags).where(eq(cardTags.id, tagId));
     await audit(tx, actor, {
@@ -508,8 +511,8 @@ export async function removeCardTag(db: DB, actor: Actor | null, tagId: number):
       entityType: "card_tag",
       entityId: tagId,
       campaignId: c.id,
-      before: { photoId: t.tag.photoId, card: t.tag.cardId, name: t.cardName },
+      before: { act: t.actNo, of, card: t.tag.cardId, name: t.cardName },
     });
   });
-  return { campaignId: c.id, photoId: t.tag.photoId };
+  return { campaignId: c.id, actNo: t.actNo, campaignPlayerId: t.tag.campaignPlayerId };
 }
