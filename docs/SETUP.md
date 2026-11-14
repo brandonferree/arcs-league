@@ -81,7 +81,7 @@ Photos live in a **private** Vercel Blob store. The site serves them itself, che
 
 1. In the Vercel project, open **Storage → Create Database → Blob** (it may be listed as **Blob** under "Vercel" storage).
 2. Name it `arcs-league-photos`, choose **Private** access, pick the region nearest your Neon database (US East), and create it.
-3. Connect it to the `arcs-league` project for all environments. Vercel adds `BLOB_READ_WRITE_TOKEN` itself; leave the variable prefix as `BLOB`.
+3. Connect it to the `arcs-league` project for all environments. Vercel adds `BLOB_READ_WRITE_TOKEN` (or, on newer setups, `BLOB_STORE_ID`) itself; either works. Leave the variable prefix as `BLOB`.
 4. **Deployments → ⋯ → Redeploy** so the running site picks up the new variable.
 5. Open a campaign with a recorded act, add a photo in the **Photos** panel, and check it shows.
 

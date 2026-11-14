@@ -1,10 +1,12 @@
 /**
  * Where photo files live.
  *
- *  - BLOB_READ_WRITE_TOKEN set (production): a *private* Vercel Blob store. Files
+ *  - BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID set (production; Vercel sets one or
+ *    the other when a store is connected, the latter with OIDC auth): a *private*
+ *    Vercel Blob store. Files
  *    are never linked directly; /api/photos/<id>/<size> checks who is asking and
  *    streams them, so members-only photos stay members-only.
- *  - No token, outside Vercel (local development): files in ./.photos-local.
+ *  - Neither, outside Vercel (local development): files in ./.photos-local.
  *  - Tests: memoryPhotoStore().
  */
 import { randomUUID } from "node:crypto";
@@ -35,7 +37,8 @@ export function newPhotoKey(campaignId: number, actNo: number, slot: string, siz
   return `photos/c${campaignId}/act${actNo}/${slot}-${randomUUID()}-${size}.jpg`;
 }
 
-function blobStore(token: string): PhotoStore {
+/** token undefined = let the SDK use Vercel OIDC with BLOB_STORE_ID. */
+function blobStore(token: string | undefined): PhotoStore {
   // Imported lazily so local development and tests never load the SDK.
   const sdk = () => import("@vercel/blob");
   return {
@@ -101,11 +104,11 @@ export function memoryPhotoStore(): PhotoStore & { files: Map<string, Uint8Array
 
 let cached: PhotoStore | null = null;
 
-/** The store for this environment. Throws StorageNotConfiguredError on Vercel without a token. */
+/** The store for this environment. Throws StorageNotConfiguredError on Vercel without a Blob store. */
 export function getPhotoStore(): PhotoStore {
   if (cached) return cached;
-  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim();
-  if (token) cached = blobStore(token);
+  const token = process.env.BLOB_READ_WRITE_TOKEN?.trim() || undefined;
+  if (token || process.env.BLOB_STORE_ID?.trim()) cached = blobStore(token);
   else if (process.env.VERCEL) throw new StorageNotConfiguredError();
   else cached = localStore(path.join(/*turbopackIgnore: true*/ process.cwd(), ".photos-local"));
   return cached;
