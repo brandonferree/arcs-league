@@ -38,6 +38,28 @@ Built 2026-11-14 at the owner's request. It first shipped text-only (8dd491a); t
 
 - A moderator opens **Cards → Card import**, clicks **Check Buried Giant for changes**, **Import these changes**, then **Copy card images**.
 
+## Lore and Guild card stats (owner, 2026-11-14)
+
+The owner asked to "track stats on lore and guild cards at the end of each act for the players". Built on the cards recorded per tableau; calculations in `src/lib/card-stats.ts` (unit-tested), loader in `src/server/card-stats.ts` (PGlite-tested).
+
+- **`/cards/stats`** (linked from `/cards`, `/records` and each player page): per act (I, II, III), the average Lore and Guild cards per player, then for the chosen act the most-held Lore cards and most-held Guild cards with thumbnails and how their holders did. Uses the stats filters (date range, season, player count).
+- **Player pages**: a "Cards held" panel with the player's average Lore and Guild per act, the cards they held at the end of each act (with how many games), and one row per campaign linking to each tableau.
+
+Definitions (to confirm with the owner):
+
+- **Tableau**: one player at the end of one act. It counts as **recorded** once any card is added to it; an empty tableau cannot be told apart from one nobody filled in, so it is left out (including from the averages).
+- **Lore card**: `type` is `Lore` (base Lore and the fates' own Lore cards).
+- **Guild card**: `type` is `Guild` (a fate's own Guild cards) or `tags` include `Guild` (the Blighted Reach court Guild cards, whose type is `Blighted Reach Court`). Vox cards are neither.
+- **Held**: recorded tableaux holding the card in that act, in campaigns that are not void. In-progress and stalled campaigns count, as for "Seen" on the card pages.
+- **Won**: of the holders in closed campaigns, how many were the campaign's winner, shown as a % and "w of n". Under `CARD_WIN_RATE_MIN_HOLDERS` (3, a guess like the other minimums) the rate is greyed.
+- **Averages**: Lore (Guild) cards per recorded tableau in that act.
+- **Date filter**: compares the campaign's latest act date, which is the Act III date once closed, as on the other stats pages.
+- Guests count, as for fate and card stats.
+
+Also fixed: on phones, player pages could be panned sideways because screen-reader labels inside the Campaigns table escaped its scroll box; `.table-wrap` now contains them.
+
+Verified: typecheck, 144 tests (12 new) and the production build pass; in the browser on demo data after adding cards through the tableau pages: per-act averages, Lore and Guild tables, act switching, filters carried through links, player page panel and tableau links, no sideways scroll at 375 px.
+
 ## Open
 
 - 40 cards (the 24 fates and 16 leaders) are taller than the rest; grids fit them inside the common card shape.

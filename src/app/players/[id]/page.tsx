@@ -11,6 +11,9 @@ import { playerDetail, rate, TIERS } from "@/lib/stats";
 import { filterQuery, hasFilters, parseStatsFilters } from "@/lib/stats-filters";
 import { listSeasons } from "@/server/campaigns";
 import { getPlayer, loadStatGames } from "@/server/stats";
+import { loadTableaux } from "@/server/card-stats";
+import { playerCards } from "@/lib/card-stats";
+import { PlayerCardsPanel } from "./PlayerCards";
 
 type Params = Promise<{ id: string }>;
 type SP = Promise<Record<string, string | string[] | undefined>>;
@@ -33,8 +36,13 @@ export default async function PlayerPage({ params, searchParams }: { params: Par
   // A guest linked to a real account has had its history moved there.
   if (player.linkedPlayerId) redirect(`/players/${player.linkedPlayerId}${qs}`);
 
-  const [games, seasons] = await Promise.all([loadStatGames(db, filters), listSeasons(db)]);
+  const [games, seasons, tableaux] = await Promise.all([
+    loadStatGames(db, filters),
+    listSeasons(db),
+    loadTableaux(db, filters, { playerId: id }),
+  ]);
   const d = playerDetail(games, id);
+  const cards = playerCards(tableaux, id);
 
   return (
     <>
@@ -210,6 +218,8 @@ export default async function PlayerPage({ params, searchParams }: { params: Par
           </section>
         </>
       )}
+
+      {cards ? <PlayerCardsPanel data={cards} playerName={player.name} qs={qs} /> : null}
     </>
   );
 }

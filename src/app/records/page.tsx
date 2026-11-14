@@ -39,7 +39,12 @@ export default async function RecordsPage({ searchParams }: { searchParams: SP }
     <>
       <div className="page-head">
         <div className="eyebrow">Hall of the Reach</div>
-        <h1>Records</h1>
+        <div className="page-head__row">
+          <h1>Records</h1>
+          <Link className="btn btn--quiet" href={`/cards/stats${qs}`}>
+            Lore &amp; Guild cards
+          </Link>
+        </div>
         <p className="lede">
           Awards from closed campaigns. Player awards are for members; guests still count in single-game records and
           fate stats. Minimums are provisional until there are more games.

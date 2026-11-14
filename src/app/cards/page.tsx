@@ -28,11 +28,16 @@ export default async function CardsPage({ searchParams }: { searchParams: SP }) 
         <div className="eyebrow">Reference</div>
         <div className="page-head__row">
           <h1>Cards</h1>
-          {session?.isModerator ? (
-            <Link className="btn btn--quiet" href="/admin/cards">
-              Card import
+          <div className="act-tabs">
+            <Link className="btn btn--cyan" href="/cards/stats">
+              Lore &amp; Guild stats
             </Link>
-          ) : null}
+            {session?.isModerator ? (
+              <Link className="btn btn--quiet" href="/admin/cards">
+                Card import
+              </Link>
+            ) : null}
+          </div>
         </div>
         <p className="lede">
           Every ARCS card except setup cards and player aids, from{" "}

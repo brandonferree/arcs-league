@@ -264,7 +264,8 @@ a.card:hover { border-color: var(--border-cyan); }
 
 /* ---- Tables: wide tables scroll inside their own box ---- */
 
-.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px; }
+.table-wrap { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px; }
+/* position: relative keeps absolutely positioned children (e.g. .sr-only labels) inside the scroll box, so they cannot widen the page on phones. */
 table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.data th {
   font-family: var(--font-display); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
@@ -579,3 +580,8 @@ img.card-img--full, .fate-card-img img.card-img { aspect-ratio: auto; }
 .picker__thumb--none { display: block; border: 1px dashed var(--line); }
 .tag-list__thumb { width: 34px; flex: none; }
 .tag-list__item { align-items: center; }
+
+/* Lore and Guild card stats: a card thumbnail beside its name in a table cell. */
+.card-cell { display: flex; align-items: center; gap: 10px; min-width: 130px; }
+.card-cell__thumb { width: 34px; flex: none; }
+.act-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
