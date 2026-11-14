@@ -26,9 +26,12 @@ Built ahead of phase 3 (the bot) at the owner's request (2026-11-14).
 - Typecheck and production build pass with no warnings.
 - In the browser against demo data (local file storage): a 4000×3000, 5.4 MB image uploaded as a 2048×1536 JPEG of 546 KB plus a 54 KB thumbnail; replace, portrait upload, removal, the badge count, the unreadable-file error, and a 375 px phone layout with no sideways scrolling. Signed out: the photo route returns 403 and the page shows a sign-in prompt with no photo URLs; after "Make public", both work signed out.
 
+- On production (2026-11-14): the owner uploaded a photo from a phone to the private Blob store. Vercel connected the store with `BLOB_STORE_ID` (OIDC auth) rather than a token; the code now accepts either.
+
 ## Not verified
 
-- Real Vercel Blob storage: the Blob SDK calls (`put`, `get`, `del` with private access) are untested until the owner connects a store (`docs/SETUP.md` step 4).
+- Replacing and removing a photo against the real Blob store (the `del` call), and campaign deletion cleaning up real files.
+
 - Real phone cameras, including iPhone HEIC photos in Safari and EXIF orientation from a real camera file (the browser test used generated images).
 
 ## Open
