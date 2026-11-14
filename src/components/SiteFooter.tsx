@@ -6,7 +6,7 @@ export function SiteFooter() {
         Buried Giant Studios. ARCS is published by Leder Games.
       </p>
       <p>
-        Card data is from{" "}
+        Card data and images are from{" "}
         <a href="https://cards.buriedgiant.com/" rel="noopener">
           Buried Giant Studios&rsquo; card database
         </a>

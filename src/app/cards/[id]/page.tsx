@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CardImage } from "@/components/CardImage";
 import { CardText } from "@/components/CardText";
 import { FateChip } from "@/components/fates";
 import { Kpi } from "@/components/Kpi";
@@ -52,21 +53,23 @@ export default async function CardPage({ params }: { params: Params }) {
       ) : null}
 
       <div className="grid-2 grid-2--even">
-        <section className="panel" aria-labelledby="text-h">
-          <div className="panel__head">
-            <h2 id="text-h" className="panel__title">
-              Rules text
-            </h2>
-            <a className="panel__note" href={buriedGiantCardUrl(card.id)} rel="noopener">
+        <section className="panel card-panel" aria-label="Card">
+          {card.imageV ? (
+            <CardImage id={card.id} name={card.name} imageV={card.imageV} size="full" className="card-img--full" eager />
+          ) : (
+            // The image is not copied yet: show the text meanwhile.
+            <CardText text={card.text} />
+          )}
+          <p className="small muted" style={{ margin: "12px 0 0" }}>
+            {card.flip ? (
+              <>
+                Other side: <Link href={`/cards/${card.flip.id}`}>{card.flip.name}</Link> ·{" "}
+              </>
+            ) : null}
+            <a href={buriedGiantCardUrl(card.id)} rel="noopener">
               View on Buried Giant
             </a>
-          </div>
-          <CardText text={card.text} />
-          {card.flip ? (
-            <p className="small" style={{ marginBottom: 0 }}>
-              Other side: <Link href={`/cards/${card.flip.id}`}>{card.flip.name}</Link>
-            </p>
-          ) : null}
+          </p>
         </section>
 
         <section className="panel" aria-labelledby="stats-h">
@@ -104,7 +107,7 @@ export default async function CardPage({ params }: { params: Params }) {
       </div>
 
       <p className="muted small">
-        Card text from{" "}
+        Card image and text from{" "}
         <a href={buriedGiantCardUrl(card.id)} rel="noopener">
           Buried Giant Studios&rsquo; card database
         </a>

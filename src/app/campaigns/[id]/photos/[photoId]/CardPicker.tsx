@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useDeferredValue, useState, useTransition } from "react";
-import type { PickerGroup } from "@/lib/cards";
+import { cardImageUrl, type PickerGroup } from "@/lib/cards";
 import { addCardTagAction } from "./actions";
 
 /** Search and add cards seen on a tableau photo. The player's own fate cards come first. */
@@ -65,6 +65,19 @@ export function CardPicker({ campaignId, photoId, groups }: { campaignId: number
                     <span className="picker__plus" aria-hidden="true">
                       {busy === c.id ? "…" : "+"}
                     </span>
+                    {c.imageV ? (
+                      <img
+                        className="picker__thumb"
+                        src={cardImageUrl(c.id, "thumb", c.imageV)!}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        width={240}
+                        height={335}
+                      />
+                    ) : (
+                      <span className="picker__thumb picker__thumb--none" aria-hidden="true" />
+                    )}
                     <span className="picker__name">{c.name}</span>
                     <span className="picker__type">
                       {c.type}

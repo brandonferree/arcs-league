@@ -3,10 +3,11 @@ import Link from "next/link";
 import { getDb } from "@/db";
 import type { CardImportPlan } from "@/lib/cards";
 import { formatDateTime } from "@/lib/format";
-import { cardCount, fetchUpstreamCards, lastCardImport, previewCardImport } from "@/server/cards";
+import { cardCount, cardImagesWaiting, fetchUpstreamCards, lastCardImport, previewCardImport } from "@/server/cards";
 import { RuleError } from "@/server/campaigns";
 import { getSession } from "@/server/session";
 import { importCardsAction } from "./actions";
+import { CopyImages } from "./CopyImages";
 
 export const metadata: Metadata = { title: "Card import" };
 
@@ -56,7 +57,8 @@ export default async function CardImportPage({ searchParams }: { searchParams: S
           Buried Giant Studios&rsquo; card database
         </a>{" "}
         with their permission, only when a moderator asks: the site never checks for updates on its own. Setup cards and
-        player aids are left out. Card text only for now; images come later.
+        player aids are left out. After an import, copy the card images: the site shows its own copies, never Buried
+        Giant&rsquo;s links.
       </p>
     </div>
   );
@@ -79,7 +81,7 @@ export default async function CardImportPage({ searchParams }: { searchParams: S
   }
 
   const db = await getDb();
-  const [count, last] = await Promise.all([cardCount(db), lastCardImport(db)]);
+  const [count, last, waiting] = await Promise.all([cardCount(db), lastCardImport(db), cardImagesWaiting(db)]);
   const error = typeof sp.error === "string" ? sp.error : null;
   const notice = typeof sp.notice === "string" ? sp.notice : null;
   const result = sp.check === "1" ? await check() : null;
@@ -122,8 +124,13 @@ export default async function CardImportPage({ searchParams }: { searchParams: S
             "Never imported."
           )}
         </p>
+        {count ? (
+          <div style={{ margin: "0 0 16px" }}>
+            <CopyImages key={waiting} waiting={waiting} total={count} />
+          </div>
+        ) : null}
         <div className="actions">
-          <Link className="btn btn--cyan" href="/admin/cards?check=1">
+          <Link className="btn btn--quiet" href="/admin/cards?check=1">
             Check Buried Giant for changes
           </Link>
           {!last && !result ? (

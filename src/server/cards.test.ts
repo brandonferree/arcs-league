@@ -4,9 +4,13 @@ import { connectPglite, type DB } from "@/db";
 import { auditLog, cards, cardTags, fates, players } from "@/db/schema";
 import { parseUpstream } from "@/lib/cards";
 import { createCampaign, getCampaign, NotFoundError, PermissionError, RuleError, saveAct } from "./campaigns";
+import sharp from "sharp";
 import {
   addCardTag,
+  cardImageKeys,
+  cardImagesWaiting,
   cardTypes,
+  copyCardImages,
   fateCards,
   fetchUpstreamCards,
   getCard,
@@ -21,11 +25,11 @@ import {
 import { memoryPhotoStore } from "./photo-store";
 import { savePhoto } from "./photos";
 
-const RAW = [
-  { id: "ARCS-FATE01", name: "Steward", text: "**YOUR PATH**", tags: ["Blighted Reach", "Fate", "Steward"], meta: { act: 1, complexity: 2 }, game: "arcs", product: "blightedreach" },
-  { id: "ARCS-F103", name: "Dealmakers", text: "**Bargain (Secure):** Choose a Court card.", tags: ["Blighted Reach", "Guild", "Psionic", "Steward"], meta: { keys: 0, act: 1 }, game: "arcs", product: "blightedreach" },
-  { id: "ARCS-CC01", name: "Mining Interest", text: "Gain 1 Material.", tags: ["Blighted Reach", "Blighted Reach Court", "Guild", "Material"], meta: { keys: 2 }, game: "arcs", product: "blightedreach" },
-  { id: "ARCS-L01", name: "Tool-Priests", text: "Build 1 ship.", tags: ["Base", "Lore"], game: "arcs", product: "arcsbasegame" },
+const RAW: Record<string, unknown>[] = [
+  { id: "ARCS-FATE01", name: "Steward", text: "**YOUR PATH**", image: "https://cardcdn.buriedgiant.com/cards/arcs/en-US/FATE01.webp", tags: ["Blighted Reach", "Fate", "Steward"], meta: { act: 1, complexity: 2 }, game: "arcs", product: "blightedreach" },
+  { id: "ARCS-F103", name: "Dealmakers", text: "**Bargain (Secure):** Choose a Court card.", image: "https://cardcdn.buriedgiant.com/cards/arcs/en-US/F103.webp", tags: ["Blighted Reach", "Guild", "Psionic", "Steward"], meta: { keys: 0, act: 1 }, game: "arcs", product: "blightedreach" },
+  { id: "ARCS-CC01", name: "Mining Interest", text: "Gain 1 Material.", image: "https://cardcdn.buriedgiant.com/cards/arcs/en-US/CC01.webp", tags: ["Blighted Reach", "Blighted Reach Court", "Guild", "Material"], meta: { keys: 2 }, game: "arcs", product: "blightedreach" },
+  { id: "ARCS-L01", name: "Tool-Priests", text: "Build 1 ship.", image: "https://evil.example.com/L01.webp", tags: ["Base", "Lore"], game: "arcs", product: "arcsbasegame" },
   { id: "ARCS-F101A", name: "Steward Act I Setup", tags: ["Blighted Reach", "Setup", "Steward"], game: "arcs", product: "blightedreach" },
 ];
 const upstream = (raw = RAW) => ({ ...parseUpstream(raw), version: "v1" });
@@ -161,5 +165,46 @@ describe("card tags", () => {
     expect(card?.stats).toEqual({ tagged: 1, holders: 0, wins: 0 }); // campaign not closed yet
     expect(card?.sightings.map((s) => [s.player, s.actNo])).toEqual([["Emma", 1]]);
     expect((await db.select().from(cards).where(eq(cards.id, "ARCS-F103")))[0].fateId).not.toBeNull();
+  });
+});
+
+describe("card images", () => {
+  async function webp() {
+    return sharp({ create: { width: 744, height: 1039, channels: 3, background: "#446" } }).webp().toBuffer();
+  }
+
+  it("copies images in batches with thumbnails, refuses other hosts, and re-copies changed cards", async () => {
+    await importCards(db, actor("Mod", true), upstream());
+    expect(await cardImagesWaiting(db)).toBe(4);
+    const img = await webp();
+    const fetched: string[] = [];
+    const fake = (async (u: URL | string) => {
+      fetched.push(String(u));
+      return new Response(new Uint8Array(img), { status: 200 });
+    }) as typeof fetch;
+    const store = memoryPhotoStore();
+
+    expect(await copyCardImages(db, store, actor("Emma"), { fetcher: fake }).then(() => null, (e) => e)).toBeInstanceOf(PermissionError);
+    const first = await copyCardImages(db, store, actor("Mod", true), { fetcher: fake, limit: 2 });
+    expect(first).toMatchObject({ copied: 2, remaining: 2 });
+    const rest = await copyCardImages(db, store, actor("Mod", true), { fetcher: fake });
+    expect(rest.copied).toBe(1);
+    expect(rest.failed.map((f) => [f.id, f.error])).toEqual([["ARCS-L01", "unexpected image address evil.example.com"]]);
+    expect(fetched.every((u) => u.startsWith("https://cardcdn.buriedgiant.com/"))).toBe(true);
+    expect(store.files.size).toBe(6);
+
+    const keys = await cardImageKeys(db, "ARCS-F103");
+    const thumb = await sharp(store.files.get(keys!.thumbKey!)!).metadata();
+    expect([thumb.format, thumb.width]).toEqual(["webp", 240]);
+
+    // A changed card waits for a new copy; the old files go once it is copied.
+    const next = RAW.map((c) => (c.id === "ARCS-F103" ? { ...c, text: "errata" } : c));
+    await importCards(db, actor("Mod", true), upstream(next));
+    expect(await cardImagesWaiting(db)).toBe(2); // F103 again, and L01 still failing
+    await copyCardImages(db, store, actor("Mod", true), { fetcher: fake, skip: ["ARCS-L01"] });
+    expect(store.files.has(keys!.imageKey!)).toBe(false);
+    expect(store.files.size).toBe(6);
+    expect((await getCard(db, "ARCS-F103"))?.imageV).not.toBeNull();
+    expect((await getCard(db, "ARCS-L01"))?.imageV).toBeNull();
   });
 });

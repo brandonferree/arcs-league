@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CardImage } from "@/components/CardImage";
 import { CardText } from "@/components/CardText";
 import { ProgressionBars, WinRateLine } from "@/components/charts";
 import { FateChip, FatePath } from "@/components/fates";
@@ -81,7 +82,13 @@ export default async function FatePage({ params, searchParams }: { params: Param
           </div>
           {fateCard ? (
             <>
-              <CardText text={fateCard.text} />
+              {fateCard.imageV ? (
+                <Link href={`/cards/${fateCard.id}`} className="fate-card-img">
+                  <CardImage id={fateCard.id} name={fateCard.name} imageV={fateCard.imageV} size="full" eager />
+                </Link>
+              ) : (
+                <CardText text={fateCard.text} />
+              )}
               <p className="small muted" style={{ marginBottom: 0 }}>
                 <Link href={`/cards/${fateCard.id}`}>Card page</Link> ·{" "}
                 <a href={buriedGiantCardUrl(fateCard.id)} rel="noopener">
@@ -160,16 +167,20 @@ export default async function FatePage({ params, searchParams }: { params: Param
             </h2>
             <span className="panel__note">{others.length} cards</span>
           </div>
-          <div className="card-set">
+          <div className="card-set card-set--images">
             {setActs.map((a) => (
               <div key={a ?? "any"}>
                 <h3 className="photo-act__title">{a ? `Act ${ROMAN[a as 1 | 2 | 3]}` : "Any act"}</h3>
-                <ul className="card-set__list">
+                <ul className="card-grid card-grid--small">
                   {others
                     .filter((c) => c.act === a)
                     .map((c) => (
                       <li key={c.id}>
-                        <Link href={`/cards/${c.id}`}>{c.name}</Link> <span className="muted small">{c.type}</span>
+                        <Link href={`/cards/${c.id}`} className="card-grid__item">
+                          <CardImage id={c.id} name={c.name} imageV={c.imageV} />
+                          <span className="card-grid__name">{c.name}</span>
+                          <span className="card-grid__meta">{c.type}</span>
+                        </Link>
                       </li>
                     ))}
                 </ul>

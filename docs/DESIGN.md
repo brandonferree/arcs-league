@@ -17,7 +17,7 @@ All on free tiers; the budget is $0 and there must be no always-on process.
 
 - **Next.js** (App Router, TypeScript) on **Vercel**
 - **Postgres on Neon**
-- **Vercel Blob** for photos and, later, our copies of card images (text first; see Open)
+- **Vercel Blob** for photos and our copies of card images
 - **Discord OAuth** for sign-in
 - **Discord bot as an HTTP interactions endpoint** inside the same app (slash commands and buttons arrive as signed HTTP requests; results are posted with the bot token over REST). No gateway connection.
 
@@ -178,11 +178,11 @@ Phase 1 matters most: the league has no real games yet, and every later phase is
 - **Automatic campaign titles** are "Campaign #N" (owner, 2026-11-13).
 - **Reigning champion** is the member with the most wins in closed campaigns, ties broken by win rate (owner, 2026-11-13).
 - **Photos were built before the bot** (owner, 2026-11-14). Players in a campaign (and moderators) add, replace and remove its photos and switch them public, at any time except on a void campaign; to confirm with the owner. See `docs/PHASE4_REPORT.md`.
-- **Cards were built text-first** (owner, 2026-11-14): import from `/admin/cards` on a moderator's request only; other fates' Guild and Vox cards are taggable too, since they enter the shared court; to confirm with the owner. See `docs/PHASE5_REPORT.md`.
+- **Cards** (owner, 2026-11-14): shown as images, not text; import from `/admin/cards` on a moderator's request only; other fates' Guild and Vox cards are taggable too, since they enter the shared court; to confirm with the owner. See `docs/PHASE5_REPORT.md`.
 
 ## 11. Open
 
 - **Accounts the owner must set up or authorise:** a Discord application (client ID and secret, bot token, public key), a Neon database, and a Vercel project. None exist yet. Guild, channel and moderator-role IDs are configuration, supplied as environment variables; do not commit them.
-- **Card permission:** the owner reports a yes from Buried Giant. Its exact scope (public display of card images) has not been seen in writing. Decided (owner, 2026-11-14): phase 5 launches with card names, text and links back to Buried Giant only; card images are added later, once the scope is confirmed.
+- **Card permission:** the owner reports a yes from Buried Giant. Its exact scope (public display of card images) has not been seen in writing. Decided (owner, 2026-11-14): show card images. The owner first chose text-first, then the same day asked for images instead of text. Images are copied into our Blob store (full as published plus a WebP thumbnail), never hotlinked; the text is kept for search.
 - Free tiers are ample for 40 members; photo storage is the first limit that would ever be reached.
 - Thresholds (5-game leaderboard minimum, award minimums) are guesses to revisit once real games exist.

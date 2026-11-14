@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CardImage } from "@/components/CardImage";
 import { FateChip } from "@/components/fates";
 import { getDb } from "@/db";
 import { pickerGroups } from "@/lib/cards";
@@ -109,6 +110,9 @@ export default async function PhotoPage({ params, searchParams }: { params: Para
               <ul className="tag-list">
                 {tags.map((t) => (
                   <li key={t.tagId} className="tag-list__item">
+                    <Link href={`/cards/${t.cardId}`} className="tag-list__thumb" aria-hidden="true" tabIndex={-1}>
+                      <CardImage id={t.cardId} name={t.name} imageV={t.imageV} />
+                    </Link>
                     <Link href={`/cards/${t.cardId}`}>{t.name}</Link>
                     <span className="muted small">
                       {t.type}

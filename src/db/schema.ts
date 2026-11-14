@@ -227,7 +227,8 @@ export const photos = pgTable(
 /**
  * ARCS cards copied from Buried Giant Studios' card database (phase 5), with
  * permission. Imported by a moderator, never synced automatically. Setup cards
- * and player aids are not imported. Text only for now; images come later.
+ * and player aids are not imported. Images are copied into our storage after
+ * the import; the text is kept for search.
  */
 export const cards = pgTable(
   "cards",
@@ -251,6 +252,12 @@ export const cards = pgTable(
     source: jsonb("source").notNull(),
     /** Set when a later import no longer has the card; kept so tags survive. */
     removedAt: timestamp("removed_at", { withTimezone: true }),
+    /** Our copies of the card image in storage (full as published, and a small thumbnail). Never hotlinked. */
+    imageKey: text("image_key"),
+    thumbKey: text("thumb_key"),
+    /** True until the current image has been copied: new or changed cards on import. */
+    imageStale: boolean("image_stale").notNull().default(true),
+    imageCopiedAt: timestamp("image_copied_at", { withTimezone: true }),
     importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: updatedAt(),
   },

@@ -3,10 +3,11 @@
  * database, the card reference, and card tags on tableau photos.
  *
  * Copy, credit, never hotlink, never auto-sync: cards are fetched only when a
- * moderator asks, stored in Postgres, and every card page links back to
- * Buried Giant. Text only for now; images come later (spec section 11).
+ * moderator asks, stored in Postgres, their images copied into our storage,
+ * and every card page links back to Buried Giant.
  */
-import { and, asc, desc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
+import { and, asc, desc, eq, ilike, inArray, isNull, notInArray, or, sql } from "drizzle-orm";
 import type { DB, DbOrTx } from "@/db";
 import { acts, actResults, auditLog, campaignPlayers, campaigns, cards, cardTags, fates, photos, players } from "@/db/schema";
 import {
@@ -21,6 +22,7 @@ import {
 import { canRemoveCardTag, canTagCards, type Actor } from "@/lib/permissions";
 import type { ActNumber, Tier } from "@/lib/rules";
 import { audit, getCampaign, NotFoundError, PermissionError, requireModerator, RuleError } from "./campaigns";
+import type { PhotoStore } from "./photo-store";
 
 // ---------------------------------------------------------------------------
 // Import
@@ -81,6 +83,8 @@ export async function importCards(db: DB, actor: Actor, upstream: Upstream): Pro
             flipSideId: sql`excluded.flip_side_id`,
             source: sql`excluded.source`,
             removedAt: sql`null`,
+            // New, changed or returning cards need their image copied (again).
+            imageStale: sql`case when ${cards.source} is distinct from excluded.source or ${cards.removedAt} is not null then true else ${cards.imageStale} end`,
             updatedAt: sql`case when ${cards.source} is distinct from excluded.source or ${cards.removedAt} is not null then excluded.updated_at else ${cards.updatedAt} end`,
           },
         });
@@ -112,6 +116,91 @@ export async function importCards(db: DB, actor: Actor, upstream: Upstream): Pro
     });
     return plan;
   });
+}
+
+// ---------------------------------------------------------------------------
+// Images: copied from Buried Giant's CDN into our storage, never hotlinked.
+
+export const CARD_THUMB_WIDTH = 240;
+const IMAGE_HOST = "cardcdn.buriedgiant.com";
+const MAX_IMAGE_BYTES = 3_000_000;
+
+export interface CopyImagesResult {
+  copied: number;
+  failed: { id: string; name: string; error: string }[];
+  /** Cards still waiting for an image after this batch. */
+  remaining: number;
+}
+
+/** Cards whose image still has to be copied. */
+export async function cardImagesWaiting(db: DbOrTx): Promise<number> {
+  const [r] = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(cards)
+    .where(and(eq(cards.imageStale, true), isNull(cards.removedAt)));
+  return r?.n ?? 0;
+}
+
+/**
+ * Copies the images of up to `limit` cards that need one: downloads Buried
+ * Giant's image, stores it as published plus a small WebP thumbnail, and
+ * deletes the previous copies. Run in batches so no request runs long.
+ * Failures are reported and stay waiting, to be retried by the next batch.
+ */
+export async function copyCardImages(
+  db: DB,
+  store: PhotoStore,
+  actor: Actor,
+  { limit = 25, skip = [] as string[], fetcher = fetch as typeof fetch } = {},
+): Promise<CopyImagesResult> {
+  requireModerator(actor);
+  const sharp = (await import("sharp")).default;
+  const batch = await db
+    .select({ id: cards.id, name: cards.name, source: cards.source, imageKey: cards.imageKey, thumbKey: cards.thumbKey })
+    .from(cards)
+    .where(and(eq(cards.imageStale, true), isNull(cards.removedAt), skip.length ? notInArray(cards.id, skip) : undefined))
+    .orderBy(asc(cards.id))
+    .limit(limit);
+
+  const result: CopyImagesResult = { copied: 0, failed: [], remaining: 0 };
+  const one = async (c: (typeof batch)[number]) => {
+    const url = (c.source as { image?: unknown }).image;
+    try {
+      if (typeof url !== "string") throw new Error("no image in Buried Giant's data");
+      const u = new URL(url);
+      if (u.protocol !== "https:" || u.hostname !== IMAGE_HOST) throw new Error(`unexpected image address ${u.hostname}`);
+      const res = await fetcher(u, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      if (bytes.length > MAX_IMAGE_BYTES) throw new Error("image too large");
+      const meta = await sharp(bytes).metadata(); // throws if it is not an image
+      if (!meta.width || !meta.height || !meta.format) throw new Error("not an image");
+      const ext = meta.format === "jpeg" ? "jpg" : meta.format;
+      const thumb = await sharp(bytes).resize({ width: CARD_THUMB_WIDTH, withoutEnlargement: true }).webp({ quality: 72 }).toBuffer();
+      const tag = randomUUID().slice(0, 8);
+      const imageKey = `cards/${c.id}-${tag}-full.${ext}`;
+      const thumbKey = `cards/${c.id}-${tag}-thumb.webp`;
+      await Promise.all([store.put(imageKey, bytes, `image/${meta.format}`), store.put(thumbKey, new Uint8Array(thumb), "image/webp")]);
+      await db
+        .update(cards)
+        .set({ imageKey, thumbKey, imageStale: false, imageCopiedAt: new Date() })
+        .where(eq(cards.id, c.id));
+      const old = [c.imageKey, c.thumbKey].filter((k): k is string => !!k);
+      if (old.length) await store.del(old).catch((e) => console.error("card image cleanup failed", e));
+      result.copied++;
+    } catch (err) {
+      result.failed.push({ id: c.id, name: c.name, error: err instanceof Error ? err.message : String(err) });
+    }
+  };
+  for (let i = 0; i < batch.length; i += 5) await Promise.all(batch.slice(i, i + 5).map(one));
+  result.remaining = await cardImagesWaiting(db);
+  return result;
+}
+
+/** What the card image route needs. */
+export async function cardImageKeys(db: DbOrTx, id: string) {
+  const [r] = await db.select({ imageKey: cards.imageKey, thumbKey: cards.thumbKey }).from(cards).where(eq(cards.id, id));
+  return r ?? null;
 }
 
 export interface ImportRecord {
@@ -181,6 +270,8 @@ export interface CardListRow {
   act: number | null;
   keys: number | null;
   fate: { name: string; tier: Tier } | null;
+  /** Image version (copy time), null until the image is copied. */
+  imageV: number | null;
   stats: CardStats;
 }
 
@@ -204,6 +295,7 @@ export async function listCards(db: DbOrTx, f: CardListFilters = {}): Promise<Ca
       keys: cards.keys,
       fateName: fates.name,
       fateTier: fates.tier,
+      imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end`,
     })
     .from(cards)
     .leftJoin(fates, eq(fates.id, cards.fateId))
@@ -218,6 +310,7 @@ export async function listCards(db: DbOrTx, f: CardListFilters = {}): Promise<Ca
     act: r.act,
     keys: r.keys,
     fate: r.fateName && r.fateTier ? { name: r.fateName, tier: r.fateTier } : null,
+    imageV: r.imageV,
     stats: stats.get(r.id) ?? NO_STATS,
   }));
 }
@@ -249,7 +342,7 @@ export interface CardSighting {
 
 export async function getCard(db: DbOrTx, id: string) {
   const [row] = await db
-    .select({ card: cards, fateName: fates.name, fateTier: fates.tier })
+    .select({ card: cards, fateName: fates.name, fateTier: fates.tier, imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end` })
     .from(cards)
     .leftJoin(fates, eq(fates.id, cards.fateId))
     .where(eq(cards.id, id));
@@ -278,6 +371,7 @@ export async function getCard(db: DbOrTx, id: string) {
   return {
     ...row.card,
     fate: row.fateName && row.fateTier ? { name: row.fateName, tier: row.fateTier } : null,
+    imageV: row.imageV,
     flip,
     stats: (await statsByCard(db, [id])).get(id) ?? NO_STATS,
     sightings: sightings.map((s) => ({ ...s, actNo: s.actNo as ActNumber })) as CardSighting[],
@@ -287,7 +381,7 @@ export async function getCard(db: DbOrTx, id: string) {
 /** A fate's own cards (its fate card included), for the fate page. */
 export async function fateCards(db: DbOrTx, fateId: number) {
   return db
-    .select({ id: cards.id, name: cards.name, type: cards.type, act: cards.act, text: cards.text, keys: cards.keys })
+    .select({ id: cards.id, name: cards.name, type: cards.type, act: cards.act, text: cards.text, keys: cards.keys, imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end` })
     .from(cards)
     .where(and(eq(cards.fateId, fateId), isNull(cards.removedAt)))
     .orderBy(asc(cards.act), asc(cards.id));
@@ -303,6 +397,7 @@ export interface PhotoTag {
   type: string;
   taggedById: number | null;
   taggedBy: string | null;
+  imageV: number | null;
 }
 
 export async function tagsForPhotos(db: DbOrTx, photoIds: number[]): Promise<Map<number, PhotoTag[]>> {
@@ -317,6 +412,7 @@ export async function tagsForPhotos(db: DbOrTx, photoIds: number[]): Promise<Map
       type: cards.type,
       taggedById: cardTags.taggedById,
       taggedBy: players.displayName,
+      imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end`,
     })
     .from(cardTags)
     .innerJoin(cards, eq(cards.id, cardTags.cardId))
@@ -330,7 +426,7 @@ export async function tagsForPhotos(db: DbOrTx, photoIds: number[]): Promise<Map
 /** Every current card, slimmed for the picker. */
 export async function pickerCards(db: DbOrTx): Promise<PickerCard[]> {
   return db
-    .select({ id: cards.id, name: cards.name, type: cards.type, fateId: cards.fateId, fate: fates.name, act: cards.act })
+    .select({ id: cards.id, name: cards.name, type: cards.type, fateId: cards.fateId, fate: fates.name, act: cards.act, imageV: sql<number | null>`case when ${cards.imageKey} is not null then floor(extract(epoch from ${cards.imageCopiedAt}))::int end` })
     .from(cards)
     .leftJoin(fates, eq(fates.id, cards.fateId))
     .where(isNull(cards.removedAt));

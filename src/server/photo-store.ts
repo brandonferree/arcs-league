@@ -1,5 +1,5 @@
 /**
- * Where photo files live.
+ * Where photo files (and our copies of card images) live.
  *
  *  - BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID set (production; Vercel sets one or
  *    the other when a store is connected, the latter with OIDC auth): a *private*
@@ -60,6 +60,11 @@ function blobStore(token: string | undefined): PhotoStore {
   };
 }
 
+/** Content type from a key's extension, for the stores that do not keep one. */
+function typeOf(key: string): string {
+  return key.endsWith(".webp") ? "image/webp" : key.endsWith(".png") ? "image/png" : "image/jpeg";
+}
+
 function localStore(root: string): PhotoStore {
   const file = (key: string) => {
     const p = path.resolve(root, key);
@@ -74,7 +79,7 @@ function localStore(root: string): PhotoStore {
     },
     async get(key) {
       try {
-        return { body: new Uint8Array(await readFile(file(key))), contentType: "image/jpeg" };
+        return { body: new Uint8Array(await readFile(file(key))), contentType: typeOf(key) };
       } catch {
         return null;
       }
@@ -94,7 +99,7 @@ export function memoryPhotoStore(): PhotoStore & { files: Map<string, Uint8Array
     },
     async get(key) {
       const body = files.get(key);
-      return body ? { body, contentType: "image/jpeg" } : null;
+      return body ? { body, contentType: typeOf(key) } : null;
     },
     async del(keys) {
       for (const k of keys) files.delete(k);

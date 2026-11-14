@@ -91,7 +91,9 @@ Storage is the free tier's first limit (spec section 11). Each photo is roughly 
 
 ## 5. Cards (phase 5)
 
-No account needed. Once deployed, sign in as a moderator, open **Cards → Card import**, click **Check Buried Giant for changes**, then **Import these changes**. Repeat whenever Buried Giant updates their cards; the site never checks on its own.
+No account needed, but photo storage (step 4) must be set up first. Once deployed, sign in as a moderator, open **Cards → Card import**, click **Check Buried Giant for changes**, then **Import these changes**, then **Copy card images** and keep the page open until it says all are copied (about a minute). Repeat whenever Buried Giant updates their cards; the site never checks on its own, and only new or changed cards' images are copied again.
+
+The images take about 100 MB of Blob storage and about 920 Blob uploads the first time (Hobby allows 2,000 a month).
 
 ## Local development
 

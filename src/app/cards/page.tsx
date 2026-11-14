@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { FateChip } from "@/components/fates";
+import { CardImage } from "@/components/CardImage";
 import { getDb } from "@/db";
-import { productName, ROMAN } from "@/lib/format";
 import { cardCount, cardTypes, listCards } from "@/server/cards";
 import { listStatFates } from "@/server/stats";
 import { getSession } from "@/server/session";
@@ -40,8 +39,8 @@ export default async function CardsPage({ searchParams }: { searchParams: SP }) 
           <a href="https://cards.buriedgiant.com/" rel="noopener">
             Buried Giant Studios&rsquo; card database
           </a>{" "}
-          with their permission. &ldquo;Seen&rdquo; counts tableau photos where members tagged the card; &ldquo;Holders
-          won&rdquo; is how many of the players holding it in a closed campaign went on to win.
+          with their permission. &ldquo;Seen&rdquo; counts tableau photos where members tagged the card; each card&rsquo;s
+          page shows how its holders did.
         </p>
       </div>
 
@@ -106,39 +105,21 @@ export default async function CardsPage({ searchParams }: { searchParams: SP }) 
             {rows.length === 0 ? (
               <p className="empty">No cards match.</p>
             ) : (
-              <div className="table-wrap">
-                <table className="data">
-                  <thead>
-                    <tr>
-                      <th>Card</th>
-                      <th>Type</th>
-                      <th>Fate</th>
-                      <th className="num">Act</th>
-                      <th className="num">Keys</th>
-                      <th className="num">Seen</th>
-                      <th className="num">Holders won</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((c) => (
-                      <tr key={c.id}>
-                        <td>
-                          <Link href={`/cards/${c.id}`} style={{ fontWeight: 600 }}>
-                            {c.name}
-                          </Link>
-                          <div className="muted small">{productName(c.product)}</div>
-                        </td>
-                        <td>{c.type}</td>
-                        <td>{c.fate ? <FateChip fate={c.fate.name} tier={c.fate.tier} /> : <span className="muted">–</span>}</td>
-                        <td className="num">{c.act ? ROMAN[c.act as 1 | 2 | 3] : "–"}</td>
-                        <td className="num">{c.keys ?? "–"}</td>
-                        <td className="num">{c.stats.tagged || "–"}</td>
-                        <td className="num">{c.stats.holders ? `${c.stats.wins} of ${c.stats.holders}` : "–"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <ul className="card-grid">
+                {rows.map((c) => (
+                  <li key={c.id}>
+                    <Link href={`/cards/${c.id}`} className="card-grid__item">
+                      <CardImage id={c.id} name={c.name} imageV={c.imageV} />
+                      <span className="card-grid__name">{c.name}</span>
+                      <span className="card-grid__meta">
+                        {c.fate ? `${c.fate.name} · ` : ""}
+                        {c.type}
+                        {c.stats.tagged ? ` · seen ${c.stats.tagged}` : ""}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
         </>

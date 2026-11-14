@@ -8,6 +8,11 @@ import { z } from "zod";
 export const BURIED_GIANT_CARDS_URL = "https://cardcdn.buriedgiant.com/cards.json";
 export const BURIED_GIANT_VERSION_URL = "https://cardcdn.buriedgiant.com/version.json";
 
+/** Our copy of a card's image (never Buried Giant's URL); null until it has been copied. v changes when the image does. */
+export function cardImageUrl(id: string, size: "full" | "thumb", v: number | null | undefined): string | null {
+  return v == null ? null : `/api/cards/${encodeURIComponent(id)}/${size}?v=${v}`;
+}
+
 /** Each card's page on Buried Giant's own database; every card links back there. */
 export function buriedGiantCardUrl(id: string): string {
   return `https://cards.buriedgiant.com/card/${encodeURIComponent(id)}`;
@@ -198,6 +203,8 @@ export interface PickerCard {
   /** The fate's name, to tell apart fate versions of court cards (there are several "Loyal Engineers"). */
   fate?: string | null;
   act: number | null;
+  /** Image version, for the thumbnail; null until copied. */
+  imageV?: number | null;
 }
 
 export interface PickerGroup {
