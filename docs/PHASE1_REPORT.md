@@ -53,11 +53,13 @@ Verified on production:
 - Every public page returns 200; the development sign-in route returns 404 and the sign-in page shows no development form.
 - Real Discord sign-in round-trips through `/api/auth/callback`.
 - The moderator-role check: the owner gets the Mod badge once they hold `ARCS Mod` (owning the server is not enough).
+- Logging a campaign through the web form (owner, 2026-11-14).
 
 Still to check on production:
 
 - A non-member being sent to `/sign-in?error=not-member` (needs an account outside the server).
-- Logging a full campaign on production.
+
+The owner noticed after the test log that the form takes no card entries and no photos. Both are expected for now: photos are phase 4, and cards are never typed in at submission but tagged later from tableau photos in phase 5 (spec section 4).
 
 ## Not verified
 - **Reduced motion with the OS setting actually on** (only the CSS rule was checked), and real phones (only an emulated 375px viewport).
