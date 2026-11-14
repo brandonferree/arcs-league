@@ -7,8 +7,8 @@
  *
  * Later phases add tables that hang off these without changing them:
  *   - photos      (act_id, campaign_player_id null = board photo, blob keys)   phase 4 (below)
- *   - cards       (Buried Giant card id, name, text, tags, meta, blob keys)    phase 5
- *   - card_tags   (photo_id, card_id, tagged_by)                                phase 5
+ *   - cards       (Buried Giant card id, name, text, tags, meta, blob keys)    phase 5 (below)
+ *   - card_tags   (photo_id, card_id, tagged_by)                                phase 5 (below)
  * `fates.card_id` already holds the ARCS-FATExx id to join fates to cards.
  */
 import { sql } from "drizzle-orm";
@@ -224,6 +224,52 @@ export const photos = pgTable(
   ],
 );
 
+/**
+ * ARCS cards copied from Buried Giant Studios' card database (phase 5), with
+ * permission. Imported by a moderator, never synced automatically. Setup cards
+ * and player aids are not imported. Text only for now; images come later.
+ */
+export const cards = pgTable(
+  "cards",
+  {
+    /** Buried Giant id, e.g. ARCS-F103. */
+    id: text("id").primaryKey(),
+    name: text("name").notNull(),
+    /** Rules text in Buried Giant's markup (**bold**, *italic*, `symbol:x`). */
+    text: text("text"),
+    /** The card's kind: the second Buried Giant tag (Guild, Vox, Lore, Base Court, Fate...). */
+    type: text("type").notNull(),
+    /** arcsbasegame, blightedreach or leaders-lore. */
+    product: text("product").notNull(),
+    tags: jsonb("tags").$type<string[]>().notNull(),
+    /** The fate this card belongs to, from its tags. */
+    fateId: integer("fate_id").references(() => fates.id),
+    act: smallint("act"),
+    keys: smallint("keys"),
+    flipSideId: text("flip_side_id"),
+    /** The upstream record as imported, to detect changes on the next import. */
+    source: jsonb("source").notNull(),
+    /** Set when a later import no longer has the card; kept so tags survive. */
+    removedAt: timestamp("removed_at", { withTimezone: true }),
+    importedAt: timestamp("imported_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("cards_fate_idx").on(t.fateId), index("cards_type_idx").on(t.type)],
+);
+
+/** A card a member saw on a tableau photo (phase 5). */
+export const cardTags = pgTable(
+  "card_tags",
+  {
+    id: serial("id").primaryKey(),
+    photoId: integer("photo_id").notNull().references(() => photos.id, { onDelete: "cascade" }),
+    cardId: text("card_id").notNull().references(() => cards.id),
+    taggedById: integer("tagged_by_id").references(() => players.id),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("card_tags_unique").on(t.photoId, t.cardId), index("card_tags_card_idx").on(t.cardId)],
+);
+
 /** Every change: who, when, before and after. */
 export const auditLog = pgTable(
   "audit_log",
@@ -253,3 +299,4 @@ export type Act = typeof acts.$inferSelect;
 export type ActResult = typeof actResults.$inferSelect;
 export type Season = typeof seasons.$inferSelect;
 export type Photo = typeof photos.$inferSelect;
+export type Card = typeof cards.$inferSelect;

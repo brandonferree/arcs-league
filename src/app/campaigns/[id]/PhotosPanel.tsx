@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { ROMAN } from "@/lib/format";
 import type { CampaignDetail } from "@/server/campaigns";
+import type { PhotoTag } from "@/server/cards";
 import type { PhotoView } from "@/server/photos";
 import { deletePhotoAction, setPhotosPublicAction } from "../actions";
 
@@ -12,11 +13,14 @@ import { deletePhotoAction, setPhotosPublicAction } from "../actions";
 export function PhotosPanel({
   c,
   photos,
+  tags,
   canView,
   canManage,
 }: {
   c: CampaignDetail;
   photos: PhotoView[];
+  /** Card tags per photo id. */
+  tags: Map<number, PhotoTag[]>;
   canView: boolean;
   canManage: boolean;
 }) {
@@ -75,9 +79,9 @@ export function PhotosPanel({
                       <li key={s.key} className="photo-slot">
                         <figure className="photo-slot__figure">
                           {s.photo ? (
-                            <a href={`/api/photos/${s.photo.id}/full`} target="_blank" rel="noopener" className="photo-slot__frame">
+                            <Link href={`/campaigns/${c.id}/photos/${s.photo.id}`} className="photo-slot__frame">
                               <img src={`/api/photos/${s.photo.id}/thumb`} alt={what} loading="lazy" decoding="async" />
-                            </a>
+                            </Link>
                           ) : (
                             <div className="photo-slot__frame photo-slot__frame--empty">No photo</div>
                           )}
@@ -86,6 +90,20 @@ export function PhotosPanel({
                             {s.photo?.uploadedBy ? <span className="muted"> · by {s.photo.uploadedBy}</span> : null}
                           </figcaption>
                         </figure>
+                        {s.photo && s.slot !== "board" ? (
+                          <div className="photo-slot__tags small">
+                            {(tags.get(s.photo.id) ?? []).map((t, i) => (
+                              <span key={t.tagId}>
+                                {i > 0 ? ", " : ""}
+                                <Link href={`/cards/${t.cardId}`}>{t.name}</Link>
+                              </span>
+                            ))}
+                            {(tags.get(s.photo.id) ?? []).length ? " · " : ""}
+                            <Link href={`/campaigns/${c.id}/photos/${s.photo.id}`} className="muted">
+                              {(tags.get(s.photo.id) ?? []).length ? "Tag more" : "Tag cards"}
+                            </Link>
+                          </div>
+                        ) : null}
                         {canManage ? (
                           <div className="photo-slot__actions">
                             <PhotoUpload campaignId={c.id} actNo={a.actNo} slot={s.slot} label={what} replace={!!s.photo} />

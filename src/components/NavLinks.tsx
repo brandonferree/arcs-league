@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/players", label: "Players" },
   { href: "/fates", label: "Fates" },
   { href: "/records", label: "Records" },
+  { href: "/cards", label: "Cards" },
   { href: "/campaigns/new", label: "Log a game" },
 ];
 

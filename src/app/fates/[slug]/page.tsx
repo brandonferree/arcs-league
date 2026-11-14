@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CardText } from "@/components/CardText";
 import { ProgressionBars, WinRateLine } from "@/components/charts";
 import { FateChip, FatePath } from "@/components/fates";
 import { Kpi } from "@/components/Kpi";
 import { FilterNote, StatsFilterBar } from "@/components/StatsFilterBar";
 import { getDb } from "@/db";
 import { fateSlug, formatAvg, formatDate, formatPct, ROMAN } from "@/lib/format";
+import { buriedGiantCardUrl } from "@/lib/cards";
 import { fateDetail, type FateSwitch } from "@/lib/stats";
 import { filterQuery, parseStatsFilters } from "@/lib/stats-filters";
 import { listSeasons } from "@/server/campaigns";
+import { fateCards } from "@/server/cards";
 import { listStatFates, loadStatGames } from "@/server/stats";
 
 type Params = Promise<{ slug: string }>;
@@ -31,7 +34,10 @@ export default async function FatePage({ params, searchParams }: { params: Param
   const filters = parseStatsFilters(await searchParams);
   const qs = filterQuery(filters);
   const db = await getDb();
-  const [games, seasons] = await Promise.all([loadStatGames(db, filters), listSeasons(db)]);
+  const [games, seasons, cardSet] = await Promise.all([loadStatGames(db, filters), listSeasons(db), fateCards(db, fate.id)]);
+  const fateCard = cardSet.find((c) => c.id === fate.cardId) ?? null;
+  const others = cardSet.filter((c) => c.id !== fate.cardId);
+  const setActs = [...new Set(others.map((c) => c.act))].sort((a, b) => (a ?? 9) - (b ?? 9));
   const d = fateDetail(games, fates, fate.id)!;
   const s = d.summary;
   // A fates can be held in any act (by continuation), B from Act II, C only in Act III.
@@ -73,10 +79,22 @@ export default async function FatePage({ params, searchParams }: { params: Param
             </h2>
             <span className="panel__note">Complexity {fate.complexity ?? "–"}</span>
           </div>
-          <p className="empty">
-            The fate card, its objective text for each act and its card set arrive with the card import from Buried
-            Giant Studios&apos; database.
-          </p>
+          {fateCard ? (
+            <>
+              <CardText text={fateCard.text} />
+              <p className="small muted" style={{ marginBottom: 0 }}>
+                <Link href={`/cards/${fateCard.id}`}>Card page</Link> ·{" "}
+                <a href={buriedGiantCardUrl(fateCard.id)} rel="noopener">
+                  View on Buried Giant
+                </a>
+              </p>
+            </>
+          ) : (
+            <p className="empty">
+              The fate card&rsquo;s text and its card set appear once a moderator imports the cards from Buried Giant
+              Studios&rsquo; database.
+            </p>
+          )}
         </section>
 
         <section className="panel" aria-labelledby="acts-h">
@@ -133,6 +151,33 @@ export default async function FatePage({ params, searchParams }: { params: Param
           <WinRateLine points={d.timeline} label={`${fate.name} win rate`} />
         </section>
       </div>
+
+      {others.length ? (
+        <section className="panel" aria-labelledby="set-h" style={{ marginTop: 22 }}>
+          <div className="panel__head">
+            <h2 id="set-h" className="panel__title">
+              Card set
+            </h2>
+            <span className="panel__note">{others.length} cards</span>
+          </div>
+          <div className="card-set">
+            {setActs.map((a) => (
+              <div key={a ?? "any"}>
+                <h3 className="photo-act__title">{a ? `Act ${ROMAN[a as 1 | 2 | 3]}` : "Any act"}</h3>
+                <ul className="card-set__list">
+                  {others
+                    .filter((c) => c.act === a)
+                    .map((c) => (
+                      <li key={c.id}>
+                        <Link href={`/cards/${c.id}`}>{c.name}</Link> <span className="muted small">{c.type}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid-2 grid-2--even" style={{ marginTop: 22 }}>
         <SwitchTable id="from-h" title="Switched from" note="the fate held just before" rows={d.switchedFrom} qs={qs} />

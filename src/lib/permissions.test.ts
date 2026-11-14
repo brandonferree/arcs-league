@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canEditAct, canManagePhotos, canRecordAct, canViewPhotos, isStalled, type CampaignAccess } from "./permissions";
+import { canEditAct, canManagePhotos, canRemoveCardTag, canTagCards, canRecordAct, canViewPhotos, isStalled, type CampaignAccess } from "./permissions";
 
 const campaign: CampaignAccess = { status: "in_progress", createdById: 9, playerIds: [1, 2, 3] };
 const player = { playerId: 1, isModerator: false };
@@ -68,5 +68,19 @@ describe("photos", () => {
     expect(canViewPhotos(false, false)).toBe(false);
     expect(canViewPhotos(true, false)).toBe(true);
     expect(canViewPhotos(false, true)).toBe(true);
+  });
+});
+
+describe("card tags", () => {
+  it("lets any signed-in member tag", () => {
+    expect(canTagCards(outsider)).toBe(true);
+    expect(canTagCards(null)).toBe(false);
+  });
+  it("lets the tagger, participants and moderators remove a tag", () => {
+    expect(canRemoveCardTag(outsider, outsider.playerId, campaign)).toBe(true);
+    expect(canRemoveCardTag(outsider, player.playerId, campaign)).toBe(false);
+    expect(canRemoveCardTag(player, outsider.playerId, campaign)).toBe(true);
+    expect(canRemoveCardTag(player, outsider.playerId, { ...campaign, status: "void" })).toBe(false);
+    expect(canRemoveCardTag(mod, null, campaign)).toBe(true);
   });
 });

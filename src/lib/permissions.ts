@@ -59,6 +59,17 @@ export function canViewPhotos(signedIn: boolean, photosPublic: boolean): boolean
   return signedIn || photosPublic;
 }
 
+/** Tagging cards on a tableau photo: any signed-in member (spec section 4). */
+export function canTagCards(actor: Actor | null): boolean {
+  return !!actor;
+}
+
+/** Removing a card tag: whoever added it, the campaign's participants, or a moderator. */
+export function canRemoveCardTag(actor: Actor | null, taggedById: number | null, c: CampaignAccess): boolean {
+  if (!actor) return false;
+  return actor.isModerator || actor.playerId === taggedById || (c.status !== "void" && isParticipant(actor, c));
+}
+
 export function editWindowEndsAt(actSavedAt: Date): Date {
   return new Date(actSavedAt.getTime() + EDIT_WINDOW_MS);
 }

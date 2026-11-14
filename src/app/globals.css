@@ -514,3 +514,43 @@ a.photo-slot__frame:hover { border-color: var(--border-cyan); }
 .photo-upload label:focus-within { outline: 2px solid var(--cyan-light); outline-offset: 2px; }
 .photo-upload label[aria-disabled] { opacity: 0.7; cursor: progress; }
 .photo-upload__error { margin: 0; color: var(--danger); font-size: 13px; }
+
+/* ---------------------------------------------------------------------------
+   Cards (phase 5)
+   ------------------------------------------------------------------------- */
+.card-text { font-size: 15px; line-height: 1.55; }
+.card-text p { margin: 0 0 10px; }
+.card-text p:last-child { margin-bottom: 0; }
+.card-text strong { color: var(--text-strong); }
+.card-sym {
+  display: inline-block; padding: 0 6px; margin: 0 1px; border: 1px solid var(--border-cyan);
+  border-radius: var(--radius-sm); color: var(--cyan-light); font-size: 0.8em; letter-spacing: 0.5px;
+  text-transform: uppercase; line-height: 1.5; vertical-align: 1px;
+}
+.grid-kpi--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sighting-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.sighting-list .badge { margin-left: 8px; }
+.card-set { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+.card-set__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.photo-slot__tags { overflow-wrap: anywhere; line-height: 1.5; }
+
+/* Photo page: the photo beside its tags and the picker. */
+.photo-page { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 22px; align-items: start; }
+.photo-page__photo img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+@media (max-width: 860px) { .photo-page { grid-template-columns: minmax(0, 1fr); } }
+.tag-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.tag-list__item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 14px; }
+.tag-list__item form { margin-left: auto; }
+.picker { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--hairline); padding-top: 16px; }
+.picker__groups { display: flex; flex-direction: column; gap: 16px; max-height: 560px; overflow-y: auto; padding-right: 4px; }
+.picker__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.picker__card {
+  width: 100%; display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 8px;
+  min-height: 40px; padding: 6px 10px; text-align: left; font: inherit; font-size: 14px; color: var(--text);
+  background: var(--panel-inset); border: 1px solid var(--hairline); border-radius: var(--radius-sm); cursor: pointer;
+}
+.picker__card:hover:not(:disabled) { border-color: var(--border-cyan); }
+.picker__card:disabled { opacity: 0.6; cursor: progress; }
+.picker__plus { color: var(--cyan-light); font-weight: 700; text-align: center; }
+.picker__name { overflow-wrap: anywhere; }
+.picker__type { color: var(--muted); font-size: 12px; white-space: nowrap; }

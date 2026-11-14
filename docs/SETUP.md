@@ -89,6 +89,10 @@ Until the store is connected, adding a photo on the live site says "Photo storag
 
 Storage is the free tier's first limit (spec section 11). Each photo is roughly 0.3–1 MB after shrinking, so a full four-player campaign (15 photos) is roughly 5–15 MB. Watch **Storage → arcs-league-photos → Usage**.
 
+## 5. Cards (phase 5)
+
+No account needed. Once deployed, sign in as a moderator, open **Cards → Card import**, click **Check Buried Giant for changes**, then **Import these changes**. Repeat whenever Buried Giant updates their cards; the site never checks on its own.
+
 ## Local development
 
 No accounts needed. The app uses an embedded Postgres (PGlite) stored in `.pglite/` when `DATABASE_URL` is empty, and creates its tables on first start.

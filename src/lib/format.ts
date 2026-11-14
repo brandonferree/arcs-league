@@ -54,3 +54,14 @@ export function joinNames(names: string[]): string {
   if (names.length <= 1) return names.join("");
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
+
+const PRODUCTS: Record<string, string> = {
+  arcsbasegame: "Base game",
+  blightedreach: "Blighted Reach",
+  "leaders-lore": "Leaders & Lore",
+};
+
+/** Buried Giant's product id as a readable name. */
+export function productName(product: string): string {
+  return PRODUCTS[product] ?? product;
+}

@@ -178,6 +178,7 @@ Phase 1 matters most: the league has no real games yet, and every later phase is
 - **Automatic campaign titles** are "Campaign #N" (owner, 2026-11-13).
 - **Reigning champion** is the member with the most wins in closed campaigns, ties broken by win rate (owner, 2026-11-13).
 - **Photos were built before the bot** (owner, 2026-11-14). Players in a campaign (and moderators) add, replace and remove its photos and switch them public, at any time except on a void campaign; to confirm with the owner. See `docs/PHASE4_REPORT.md`.
+- **Cards were built text-first** (owner, 2026-11-14): import from `/admin/cards` on a moderator's request only; other fates' Guild and Vox cards are taggable too, since they enter the shared court; to confirm with the owner. See `docs/PHASE5_REPORT.md`.
 
 ## 11. Open
 
