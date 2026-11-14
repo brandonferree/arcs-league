@@ -17,7 +17,7 @@ All on free tiers; the budget is $0 and there must be no always-on process.
 
 - **Next.js** (App Router, TypeScript) on **Vercel**
 - **Postgres on Neon**
-- **Vercel Blob** for photos and our copies of card images
+- **Vercel Blob** for photos and, later, our copies of card images (text first; see Open)
 - **Discord OAuth** for sign-in
 - **Discord bot as an HTTP interactions endpoint** inside the same app (slash commands and buttons arrive as signed HTTP requests; results are posted with the bot token over REST). No gateway connection.
 
@@ -182,6 +182,6 @@ Phase 1 matters most: the league has no real games yet, and every later phase is
 ## 11. Open
 
 - **Accounts the owner must set up or authorise:** a Discord application (client ID and secret, bot token, public key), a Neon database, and a Vercel project. None exist yet. Guild, channel and moderator-role IDs are configuration, supplied as environment variables; do not commit them.
-- **Card permission:** the owner reports a yes from Buried Giant. Its exact scope (public display of card images) has not been seen in writing. If in doubt, ship the card reference with names, text and links first and add images after.
+- **Card permission:** the owner reports a yes from Buried Giant. Its exact scope (public display of card images) has not been seen in writing. Decided (owner, 2026-11-14): phase 5 launches with card names, text and links back to Buried Giant only; card images are added later, once the scope is confirmed.
 - Free tiers are ample for 40 members; photo storage is the first limit that would ever be reached.
 - Thresholds (5-game leaderboard minimum, award minimums) are guesses to revisit once real games exist.
