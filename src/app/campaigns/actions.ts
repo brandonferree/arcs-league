@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { getDb } from "@/db";
 import type { ActNumber } from "@/lib/rules";
 import {
@@ -19,6 +20,7 @@ import {
 import { getPhotoStore, StorageNotConfiguredError } from "@/server/photo-store";
 import { campaignPhotoKeys, deletePhoto, setPhotosPublic } from "@/server/photos";
 import { getSession, toActor } from "@/server/session";
+import { notifyActSaved, notifyCampaignCreated } from "@/server/bot/notify";
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; errors: string[] };
 
@@ -47,6 +49,7 @@ export async function createCampaignAction(input: CreateCampaignInput): Promise<
     const id = await createCampaign(await getDb(), actor, input);
     revalidatePath("/");
     revalidatePath("/campaigns");
+    after(() => notifyCampaignCreated(id));
     return { id };
   });
 }
@@ -62,6 +65,7 @@ export async function saveActAction(
     revalidatePath("/");
     revalidatePath("/campaigns");
     revalidatePath(`/campaigns/${campaignId}`);
+    after(() => notifyActSaved(campaignId, actNo));
     return result;
   });
 }

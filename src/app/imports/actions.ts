@@ -1,10 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { getDb } from "@/db";
 import { NotFoundError, PermissionError, RuleError } from "@/server/campaigns";
 import { confirmImport, discardImport, type PlayerChoice } from "@/server/imports";
 import { getSession, toActor } from "@/server/session";
+import { notifyActSaved } from "@/server/bot/notify";
+import type { ActNumber } from "@/lib/rules";
 
 export type ImportActionResult<T = undefined> = { ok: true; data: T } | { ok: false; errors: string[] };
 
@@ -36,6 +39,7 @@ export async function confirmImportAction(
     revalidatePath("/campaigns");
     revalidatePath(`/campaigns/${res.campaignId}`);
     revalidatePath("/imports");
+    after(() => notifyActSaved(res.campaignId, res.actNo as ActNumber));
     return res;
   });
 }

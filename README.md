@@ -2,7 +2,7 @@
 
 An unofficial fan site for logging and analysing campaign games of ARCS: The Blighted Reach. Campaigns are opened from Discord, recorded act by act on the web, and turned into leaderboards, fate and card statistics, and records.
 
-**Status:** phase 1 built (site skeleton, Discord sign-in, act-by-act campaign logging with the fate-legality validator, campaign list and detail). Not yet deployed. See [`docs/PHASE1_REPORT.md`](docs/PHASE1_REPORT.md).
+**Status:** phases 1–5 built: campaign logging with the fate-legality validator, stats pages, the Discord bot, photos and cards; plus meeples imports. Phase 6 (public API) is next. Reports are in [`docs/`](docs/).
 
 - Spec: [`docs/DESIGN.md`](docs/DESIGN.md)
 - Accounts, credentials and local development: [`docs/SETUP.md`](docs/SETUP.md)

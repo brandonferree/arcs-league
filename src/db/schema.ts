@@ -115,6 +115,8 @@ export const campaigns = pgTable(
     winnerOverrideReason: text("winner_override_reason"),
     /** Discord thread the bot created for this campaign (phase 3). */
     discordThreadId: text("discord_thread_id"),
+    /** The bot's closing announcement in #arcs, edited if the result changes later. */
+    discordAnnouncementId: text("discord_announcement_id"),
     /** Photos are members-only unless this is set (phase 4). */
     photosPublic: boolean("photos_public").notNull().default(false),
     voidReason: text("void_reason"),
@@ -177,6 +179,8 @@ export const acts = pgTable(
     createdAt: createdAt(),
     updatedById: integer("updated_by_id").references(() => players.id),
     updatedAt: updatedAt(),
+    /** The bot's result card in the campaign thread, edited when the act is edited. */
+    discordMessageId: text("discord_message_id"),
   },
   (t) => [
     uniqueIndex("acts_campaign_act_unique").on(t.campaignId, t.actNo),
@@ -350,6 +354,32 @@ export const actImports = pgTable(
     check("act_imports_status", sql`${t.status} in ('pending', 'saved', 'discarded')`),
     check("act_imports_act_no", sql`${t.actNo} between 1 and 3`),
   ],
+);
+
+export const LOBBY_STATUSES = ["open", "started", "closed"] as const;
+export type LobbyStatus = (typeof LOBBY_STATUSES)[number];
+
+/**
+ * A `/campaign start` lobby (phase 3). The bot has no gateway connection, so the
+ * lobby's state lives here and its buttons carry the lobby id. Players join in
+ * order; that order becomes the campaign's player order.
+ */
+export const discordLobbies = pgTable(
+  "discord_lobbies",
+  {
+    id: serial("id").primaryKey(),
+    channelId: text("channel_id").notNull(),
+    /** The lobby message, known from the first button press. */
+    messageId: text("message_id"),
+    openedById: integer("opened_by_id").notNull().references(() => players.id),
+    /** Player ids in join order. */
+    playerIds: jsonb("player_ids").$type<number[]>().notNull().default(sql`'[]'::jsonb`),
+    status: text("status", { enum: LOBBY_STATUSES }).notNull().default("open"),
+    campaignId: integer("campaign_id").references(() => campaigns.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [check("discord_lobbies_status", sql`${t.status} in ('open', 'started', 'closed')`)],
 );
 
 /** Every change: who, when, before and after. */

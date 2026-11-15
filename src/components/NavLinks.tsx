@@ -15,7 +15,9 @@ const LINKS = [
 
 export function NavLinks({ isModerator = false }: { isModerator?: boolean }) {
   const path = usePathname();
-  const links = isModerator ? [...LINKS, { href: "/admin/seasons", label: "Seasons" }] : LINKS;
+  const links = isModerator
+    ? [...LINKS, { href: "/admin/seasons", label: "Seasons" }, { href: "/admin/discord", label: "Bot" }]
+    : LINKS;
   const current = links.filter((l) => path === l.href || path.startsWith(`${l.href}/`)).sort(
     (a, b) => b.href.length - a.href.length,
   )[0]?.href;

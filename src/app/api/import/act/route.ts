@@ -1,10 +1,11 @@
 import { revalidatePath } from "next/cache";
-import { NextResponse, type NextRequest } from "next/server";
+import { after, NextResponse, type NextRequest } from "next/server";
 import { getDb } from "@/db";
 import { MAX_SUMMARY_BYTES } from "@/lib/import/act-summary";
 import { appUrl } from "@/server/discord";
 import { bearerMatches, importResponse, importSecret } from "@/server/import-http";
 import { receiveImport } from "@/server/imports";
+import { notifyActSaved } from "@/server/bot/notify";
 
 /**
  * meeples pushes each finished act here (docs/ACT_SUMMARY_FORMAT.md, "Push").
@@ -40,6 +41,8 @@ export async function POST(req: NextRequest) {
       revalidatePath("/");
       revalidatePath("/campaigns");
       revalidatePath(`/campaigns/${outcome.campaignId}`);
+      const { campaignId, actNo } = outcome;
+      after(() => notifyActSaved(campaignId, actNo));
     }
     const res = importResponse(outcome, appUrl());
     return reply(res.status, res.body);

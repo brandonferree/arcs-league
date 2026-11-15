@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
-    "db:seed-demo": "tsx scripts/seed-demo.ts"
+    "db:seed-demo": "tsx scripts/seed-demo.ts",
+    "discord:register": "tsx scripts/register-commands.ts"
   },
   "engines": {
     "node": ">=22"
