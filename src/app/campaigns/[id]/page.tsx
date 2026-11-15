@@ -10,6 +10,8 @@ import { canEditAct, canManagePhotos, canRecordAct, canViewPhotos, editWindowEnd
 import { progressionSteps, type ActNumber } from "@/lib/rules";
 import { campaignHistory, getCampaign } from "@/server/campaigns";
 import { campaignTags } from "@/server/cards";
+import { PLATFORM_LABEL } from "@/lib/import/act-summary";
+import { listImports } from "@/server/imports";
 import { expectedPhotos, listCampaignPhotos } from "@/server/photos";
 import { getSession, toActor } from "@/server/session";
 import { deleteCampaignAction, reopenCampaignAction, voidCampaignAction } from "../actions";
@@ -45,6 +47,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
   const photos = await listCampaignPhotos(await getDb(), c.id);
   const canViewPhotosHere = canViewPhotos(!!session, c.photosPublic);
   const tableauCards = await campaignTags(await getDb(), c.id);
+  const waitingImports = session ? await listImports(await getDb(), { campaignId: c.id, status: "pending" }) : [];
 
   return (
     <>
@@ -67,6 +70,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
           <span>{c.playerCount} players</span>
           <span>Started {formatDate(c.createdAt.toISOString().slice(0, 10))}</span>
           {c.createdBy ? <span>Logged by {c.createdBy}</span> : null}
+          {c.sourcePlatform ? <span>Played on {PLATFORM_LABEL[c.sourcePlatform] ?? c.sourcePlatform}</span> : null}
           {c.discordThreadId && guildId ? (
             <a href={`https://discord.com/channels/${guildId}/${c.discordThreadId}`}>Discord thread</a>
           ) : null}
@@ -78,6 +82,12 @@ export default async function CampaignPage({ params, searchParams }: { params: P
           <li>{error}</li>
         </ul>
       ) : null}
+      {waitingImports.map((imp) => (
+        <p key={imp.id} className="notice">
+          An import of Act {ROMAN[imp.actNo as ActNumber]} from {PLATFORM_LABEL[imp.platform] ?? imp.platform} is waiting
+          for a player to check it. <Link href={`/imports/${imp.id}`}>Review the import</Link>
+        </p>
+      ))}
       {c.stalled ? (
         <p className="notice">
           Stalled: no new act for 60 days. Stalled campaigns are excluded from stats until a moderator reopens them.
@@ -180,7 +190,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
               const editable = canEditAct(actor, c.access, a.createdAt, now);
               const windowEnds = editWindowEndsAt(a.createdAt);
               return (
-                <div key={a.id} className="card">
+                <div key={a.id} id={`act-${a.actNo}`} className="card">
                   <div className="card__meta">
                     <span>
                       <strong style={{ color: "var(--text-strong)" }}>Act {ROMAN[a.actNo]}</strong> · played{" "}
@@ -188,7 +198,7 @@ export default async function CampaignPage({ params, searchParams }: { params: P
                     </span>
                     <span>
                       Saved {formatDateTime(a.createdAt)}
-                      {a.createdBy ? ` by ${a.createdBy}` : ""}
+                      {a.createdBy ? ` by ${a.createdBy}` : " automatically from an import"}
                       {a.updatedAt.getTime() !== a.createdAt.getTime()
                         ? ` · edited ${formatDateTime(a.updatedAt)}${a.updatedBy ? ` by ${a.updatedBy}` : ""}`
                         : ""}

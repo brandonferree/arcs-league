@@ -55,6 +55,16 @@ export function StatsFilterBar({
           <option value="4">4 players</option>
         </select>
       </label>
+      <label className="field">
+        <span className="field__label">Played</span>
+        <select className="select" name="played" defaultValue={filters.platform ?? ""}>
+          <option value="">Anywhere</option>
+          <option value="manual">Logged by hand</option>
+          <option value="meeples">meeples</option>
+          <option value="tts">Tabletop Simulator</option>
+          <option value="screenshot">From a screenshot</option>
+        </select>
+      </label>
       {children}
       <button className="btn btn--cyan" type="submit">
         Filter

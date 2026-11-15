@@ -1,7 +1,12 @@
 /**
- * Filters shared by every stats page (spec section 6): date range, season and
- * player count. Read from and written to the query string.
+ * Filters shared by every stats page (spec section 6): date range, season,
+ * player count and where the campaign was played. Read from and written to the
+ * query string.
  */
+
+/** "manual" is a campaign entered by hand on the site; the rest are import platforms. */
+export const PLATFORM_FILTERS = ["manual", "meeples", "tts", "screenshot"] as const;
+export type PlatformFilter = (typeof PLATFORM_FILTERS)[number];
 
 export interface StatsFilters {
   /** Inclusive ISO dates, compared with the date Act III was played. */
@@ -9,9 +14,10 @@ export interface StatsFilters {
   to: string | null;
   seasonId: number | null;
   playerCount: 3 | 4 | null;
+  platform: PlatformFilter | null;
 }
 
-export const NO_FILTERS: StatsFilters = { from: null, to: null, seasonId: null, playerCount: null };
+export const NO_FILTERS: StatsFilters = { from: null, to: null, seasonId: null, playerCount: null, platform: null };
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -32,6 +38,7 @@ export function parseStatsFilters(sp: SearchParams): StatsFilters {
     to: isoDate(one(sp.to)),
     seasonId: Number.isInteger(season) && season > 0 ? season : null,
     playerCount: pc === 3 || pc === 4 ? pc : null,
+    platform: (PLATFORM_FILTERS as readonly string[]).includes(one(sp.played) ?? "") ? (one(sp.played) as PlatformFilter) : null,
   };
 }
 
@@ -42,11 +49,21 @@ export function filterQuery(f: StatsFilters, extra: Record<string, string | numb
   if (f.to) p.set("to", f.to);
   if (f.seasonId) p.set("season", String(f.seasonId));
   if (f.playerCount) p.set("players", String(f.playerCount));
+  if (f.platform) p.set("played", f.platform);
   for (const [k, v] of Object.entries(extra)) if (v !== null && v !== undefined && v !== "") p.set(k, String(v));
   const s = p.toString();
   return s ? `?${s}` : "";
 }
 
 export function hasFilters(f: StatsFilters): boolean {
-  return !!(f.from || f.to || f.seasonId || f.playerCount);
+  return !!(f.from || f.to || f.seasonId || f.playerCount || f.platform);
+}
+
+/** Query condition for the platform filter: null source means entered by hand. */
+export function platformCondition<C>(
+  f: StatsFilters,
+  ops: { isNull: () => C; eq: (platform: string) => C },
+): C | null {
+  if (!f.platform) return null;
+  return f.platform === "manual" ? ops.isNull() : ops.eq(f.platform);
 }

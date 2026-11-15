@@ -106,6 +106,10 @@ describe("loadStatGames", () => {
     expect(await ids_({ seasonId })).toEqual([jan]);
     expect(await ids_({ playerCount: 4 })).toEqual([four]);
     expect(await ids_({ playerCount: 3, from: "2026-02-01" })).toEqual([]);
+    await db.update(campaigns).set({ sourcePlatform: "meeples" }).where(eq(campaigns.id, four));
+    expect(await ids_({ platform: "meeples" })).toEqual([four]);
+    expect(await ids_({ platform: "manual" })).toEqual([jan]);
+    expect(await ids_({ platform: "tts" })).toEqual([]);
   });
 
   it("returns nothing when there are no closed campaigns", async () => {

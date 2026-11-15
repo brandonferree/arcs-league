@@ -118,6 +118,13 @@ export const campaigns = pgTable(
     /** Photos are members-only unless this is set (phase 4). */
     photosPublic: boolean("photos_public").notNull().default(false),
     voidReason: text("void_reason"),
+    /**
+     * Where the campaign was played when it came in by import ("meeples", "tts",
+     * "screenshot"); null when entered by hand. `sourceCampaignKey` is the
+     * platform's id for the campaign (its Act I game id), so later acts attach.
+     */
+    sourcePlatform: text("source_platform"),
+    sourceCampaignKey: text("source_campaign_key"),
     lastActivityAt: timestamp("last_activity_at", { withTimezone: true }).notNull().defaultNow(),
     closedAt: timestamp("closed_at", { withTimezone: true }),
     createdById: integer("created_by_id").references(() => players.id),
@@ -133,6 +140,9 @@ export const campaigns = pgTable(
     ),
     index("campaigns_status_idx").on(t.status),
     index("campaigns_last_activity_idx").on(t.lastActivityAt),
+    uniqueIndex("campaigns_source_unique")
+      .on(t.sourcePlatform, t.sourceCampaignKey)
+      .where(sql`${t.sourceCampaignKey} is not null`),
   ],
 );
 
@@ -284,6 +294,61 @@ export const cardTags = pgTable(
   (t) => [
     uniqueIndex("card_tags_unique").on(t.actId, t.campaignPlayerId, t.cardId),
     index("card_tags_card_idx").on(t.cardId),
+  ],
+);
+
+/**
+ * A name a player uses on another platform (e.g. their meeples name), learned
+ * when someone confirms an import, so later imports match them automatically.
+ */
+export const playerAliases = pgTable(
+  "player_aliases",
+  {
+    id: serial("id").primaryKey(),
+    platform: text("platform").notNull(),
+    /** Stored lower-cased and trimmed. */
+    name: text("name").notNull(),
+    playerId: integer("player_id").notNull().references(() => players.id, { onDelete: "cascade" }),
+    createdById: integer("created_by_id").references(() => players.id),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("player_aliases_unique").on(t.platform, t.name)],
+);
+
+export const IMPORT_STATUSES = ["pending", "saved", "discarded"] as const;
+export type ImportStatus = (typeof IMPORT_STATUSES)[number];
+
+/**
+ * Act summaries received from other platforms (docs/ACT_SUMMARY_FORMAT.md).
+ * One row per platform game and act, so a resend replaces the row instead of
+ * duplicating it. `payload` keeps the summary exactly as received, including
+ * fields the site does not use yet (favors, extras).
+ */
+export const actImports = pgTable(
+  "act_imports",
+  {
+    id: serial("id").primaryKey(),
+    platform: text("platform").notNull(),
+    gameId: text("game_id").notNull(),
+    actNo: smallint("act_no").notNull(),
+    /** The platform's id for the whole campaign: campaignGameId, else gameId. */
+    campaignKey: text("campaign_key").notNull(),
+    payload: jsonb("payload").notNull(),
+    status: text("status", { enum: IMPORT_STATUSES }).notNull().default("pending"),
+    /** Why it was held for a person to confirm, as shown on the confirm page. */
+    problems: jsonb("problems").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    campaignId: integer("campaign_id").references(() => campaigns.id, { onDelete: "set null" }),
+    actId: integer("act_id").references(() => acts.id, { onDelete: "set null" }),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedById: integer("resolved_by_id").references(() => players.id),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("act_imports_unique").on(t.platform, t.gameId, t.actNo),
+    index("act_imports_status_idx").on(t.status),
+    index("act_imports_campaign_idx").on(t.campaignId),
+    check("act_imports_status", sql`${t.status} in ('pending', 'saved', 'discarded')`),
+    check("act_imports_act_no", sql`${t.actNo} between 1 and 3`),
   ],
 );
 

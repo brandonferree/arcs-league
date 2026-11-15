@@ -8,7 +8,7 @@ Owner's request (2026-11-14): fill in act results automatically instead of typin
 
 `brandonferree/ARCSdiscord` is not used for this; async games are played on meeples (owner, 2026-11-14).
 
-Nothing here is built. The file format and push contract are in `docs/ACT_SUMMARY_FORMAT.md`; meeples builds its export first, from the prompt in `docs/handoff/MEEPLES_HANDOFF.md`.
+**Status (2026-11-14):** meeples' export is built (meeples `95aa68a`). The league side of the meeples push is built: steps 1 and 2 below. The Discord bot paths, TTS and screenshots are not. The file format and push contract are in `docs/ACT_SUMMARY_FORMAT.md`; the meeples work came from `docs/handoff/MEEPLES_HANDOFF.md`.
 
 ## Findings so far
 
@@ -58,16 +58,16 @@ Decided (2026-11-14, owner left the choice to Claude): **Discord is the front do
 2. **TTS.** Does the TTS mod save a file (it could write the same JSON from Lua), or are TTS games read from a screenshot like in-person ones? Send a sample.
 3. **In-person screenshot.** What does it show: a score pad, a photo of the board, a companion app? Send a sample.
 4. **Vision model and budget.** Reading screenshots needs a vision model, which breaks the $0 budget unless it fits in Vercel AI Gateway's monthly free credit. Accept that, or only store the screenshot with the act and keep typing numbers?
-5. **Review step.** Proposed: a meeples push saves directly when every player matches a member or remembered alias and the fate rules pass; otherwise it is held for a player to confirm. Discord imports (screenshots especially, which can be misread) always ask for Confirm. Agree?
+5. **Review step.** Built as proposed (owner to confirm): a meeples push saves directly when every player matches a member or remembered alias and the fate rules pass; otherwise it is held for a player to confirm. Discord imports (screenshots especially, which can be misread) always ask for Confirm. Agree?
 6. ~~Entry point for uploads~~: decided, Discord (see above).
-7. **Leaderboard.** Do meeples and TTS games count on the same leaderboard as in-person games, or filterable / separate? Recommended: same leaderboard, with a "platform" filter alongside date, season and player count.
-8. **Player matching.** Can meeples know each player's Discord id (e.g. sign-in with Discord on meeples), or does the league match by name and remember the alias?
-9. **New campaigns from imports.** Proposed: an Act I push with no `leagueCampaign` creates a pending campaign that a player confirms (recording `source.gameId` so later acts attach). Or must the campaign always be created first via `/campaign start` or the web, and its link entered in meeples?
+7. **Leaderboard.** Built as recommended (owner to confirm): imported games count on the same leaderboard, and every stats page has a **Played** filter (anywhere, logged by hand, meeples, TTS, screenshot). Players appear under their Discord names (owner, 2026-11-14).
+8. **Player matching.** Built: Discord id when the summary has one, else a name someone confirmed before (an alias, remembered per platform), else a same-name suggestion that a person must confirm. Open: could meeples learn each player's Discord id (e.g. Discord sign-in on meeples)? Then matching is exact from the first act.
+9. **New campaigns from imports.** Built as proposed (owner to confirm): an Act I push with no `leagueCampaign` creates a pending campaign that a player confirms (recording `source.gameId` so later acts attach). Or must the campaign always be created first via `/campaign start` or the web, and its link entered in meeples?
 
 ## League-side work, in build order
 
-1. **Shared importer.** `source_platform` and `source_game_id` on campaigns/acts, a `pending_imports` table and a player-alias table (migration); `src/lib/import/act-summary.ts` with the zod schema, player/fate/card matching and unit tests against the samples; platform stats filter.
-2. **meeples push** (needs no bot). `POST /api/import/act`: bearer secret check (`MEEPLES_IMPORT_SECRET`), idempotent on platform + game id + act, responses as in the format doc, audit-logged as the import. Confirm page on the site for held imports (prefilled `ActForm` with validator results).
+1. **Shared importer** (built). Migration `0007`: `campaigns.source_platform` / `source_campaign_key`, `act_imports` (one row per platform game and act, payload kept as received, favors included) and `player_aliases`. `src/lib/import/act-summary.ts` (zod schema, fate/card/link helpers) and `src/server/imports.ts` (receive, match, auto-save, confirm, discard), tested against the samples. Platform stats filter.
+2. **meeples push** (built). `POST /api/import/act` (`src/app/api/import/act/route.ts`): Bearer check against `MEEPLES_IMPORT_SECRET`, idempotent on platform + game id + act, responses as in the format doc, audit-logged. Held imports are listed at `/imports` and confirmed at `/imports/<id>` (say who is who; the act saves as the person confirming; to change a score, confirm and then edit within 24 hours). The campaign page shows a notice while one of its imports waits. Not tested end to end against meeples: it needs the secret set on both sides (`docs/SETUP.md` step 6).
 3. **Bot (phase 3)** with the import paths: `/campaign import` with an attachment, the "Send to ARCS League" message command, the private Confirm / Edit on site reply, files copied to Blob, and result cards (including after meeples pushes).
 4. **Screenshot reading**, behind the decision in question 4: a vision model returns the same act summary JSON.
 5. Later, if needed: upload / paste on the web act form.

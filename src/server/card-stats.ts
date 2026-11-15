@@ -3,11 +3,11 @@
  * and Guild card stats. The calculations are pure and live in
  * `src/lib/card-stats.ts`; this module only reads the database.
  */
-import { and, asc, eq, gte, inArray, lte, max, ne, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte, max, ne, sql } from "drizzle-orm";
 import type { DbOrTx } from "@/db";
 import { acts, campaignPlayers, campaigns, cards, cardTags, players } from "@/db/schema";
 import type { ActNo, StatTableau } from "@/lib/card-stats";
-import { NO_FILTERS, type StatsFilters } from "@/lib/stats-filters";
+import { NO_FILTERS, platformCondition, type StatsFilters } from "@/lib/stats-filters";
 
 /**
  * Every tableau with at least one card recorded, in campaigns that are not void
@@ -23,6 +23,11 @@ export async function loadTableaux(
   const conds = [ne(campaigns.status, "void")];
   if (f.seasonId) conds.push(eq(campaigns.seasonId, f.seasonId));
   if (f.playerCount) conds.push(eq(campaigns.playerCount, f.playerCount));
+  const played = platformCondition(f, {
+    isNull: () => isNull(campaigns.sourcePlatform),
+    eq: (v) => eq(campaigns.sourcePlatform, v),
+  });
+  if (played) conds.push(played);
   const lastPlayed = max(acts.playedOn);
   const dateConds = [];
   if (f.from) dateConds.push(gte(lastPlayed, f.from));

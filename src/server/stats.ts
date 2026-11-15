@@ -2,12 +2,12 @@
  * Loads closed campaigns for the stats pages. The calculations themselves are
  * pure and live in `src/lib/stats.ts`; this module only reads the database.
  */
-import { and, asc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { DbOrTx } from "@/db";
 import { actResults, acts, campaignPlayers, campaigns, fates, players } from "@/db/schema";
 import type { StatAct, StatFate, StatGame } from "@/lib/stats";
-import { NO_FILTERS, type StatsFilters } from "@/lib/stats-filters";
+import { NO_FILTERS, platformCondition, type StatsFilters } from "@/lib/stats-filters";
 
 /**
  * Closed campaigns matching the filters, oldest first. In-progress, stalled and
@@ -18,6 +18,11 @@ export async function loadStatGames(db: DbOrTx, f: StatsFilters = NO_FILTERS): P
   const conds = [eq(campaigns.status, "closed")];
   if (f.seasonId) conds.push(eq(campaigns.seasonId, f.seasonId));
   if (f.playerCount) conds.push(eq(campaigns.playerCount, f.playerCount));
+  const played = platformCondition(f, {
+    isNull: () => isNull(campaigns.sourcePlatform),
+    eq: (v) => eq(campaigns.sourcePlatform, v),
+  });
+  if (played) conds.push(played);
   if (f.from) conds.push(gte(act3.playedOn, f.from));
   if (f.to) conds.push(lte(act3.playedOn, f.to));
 

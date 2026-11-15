@@ -2,7 +2,7 @@
 
 The contract between the games that produce results (the owner's **meeples** site, Tabletop Simulator, screenshot reading) and this league site, which imports them. One file describes **one act** of one campaign. Copy this file into the meeples repo as the spec for its export; change it here first and bump `version` if it changes.
 
-Status: agreed 2026-11-14, not yet built on either side. Build order in meeples: produce the JSON and the download button first, then the push. See `docs/FUTURE_BUILD.md`.
+Status: agreed 2026-11-14. meeples export built (meeples `95aa68a`); league endpoint, confirm page and automatic saves built 2026-11-14. Build order in meeples: produce the JSON and the download button first, then the push. See `docs/FUTURE_BUILD.md`.
 
 ## Why JSON, one act per file
 
@@ -102,7 +102,11 @@ Responses (JSON body):
 | `201` | `{ "status": "saved", "actUrl": "…" }` | Saved directly: every player matched a known member or remembered alias and the fate rules passed. |
 | `400` | `{ "status": "invalid", "errors": [ … ] }` | Not a valid v1 summary. |
 | `401` | `{ "status": "unauthorized" }` | Missing or wrong secret. |
-| `409` | `{ "status": "conflict", "actUrl": "…" }` | That act is already saved with different results; a moderator must sort it out on the site. |
+| `409` | `{ "status": "conflict", "actUrl": "…", "confirmUrl": "…" }` | That act is already saved with different results; a moderator must sort it out on the site. |
+| `413` | `{ "status": "invalid", "errors": [ … ] }` | Body over 64 KB. |
+| `503` | `{ "status": "disabled" }` | The league has no secret configured yet. Retry as a 5xx; the download still works. |
+
+A `202` also carries `"problems": [ … ]`, the reasons it is waiting, in plain English.
 
 ### Download (backup, and any producer)
 

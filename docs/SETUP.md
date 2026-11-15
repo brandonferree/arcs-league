@@ -14,6 +14,7 @@ At the end you will have set these variables in Vercel:
 | `DISCORD_GUILD_ID` | Your Discord server (step 1) | Keep private |
 | `DISCORD_MOD_ROLE_ID` | The moderator role in your server (step 1) | Keep private |
 | `BLOB_READ_WRITE_TOKEN` | Added by Vercel when you connect a Blob store (step 4, photos) | Yes |
+| `MEEPLES_IMPORT_SECRET` | You generate it (step 6, meeples imports) | Yes |
 
 `DISCORD_PUBLIC_KEY`, `DISCORD_BOT_TOKEN` and `DISCORD_ARCS_CHANNEL_ID` are for the bot in phase 3; leave them unset for now. **Never set `DEV_AUTH_STUB` on Vercel.** (It is ignored in production builds anyway.)
 
@@ -94,6 +95,28 @@ Storage is the free tier's first limit (spec section 11). Each photo is roughly 
 No account needed, but photo storage (step 4) must be set up first. Once deployed, sign in as a moderator, open **Cards → Card import**, click **Check Buried Giant for changes**, then **Import these changes**, then **Copy card images** and keep the page open until it says all are copied (about a minute). Repeat whenever Buried Giant updates their cards; the site never checks on its own, and only new or changed cards' images are copied again.
 
 The images take about 100 MB of Blob storage and about 920 Blob uploads the first time (Hobby allows 2,000 a month).
+
+## 6. meeples imports
+
+meeples pushes each finished act to `/api/import/act` (see `docs/ACT_SUMMARY_FORMAT.md`). Until this is set, the endpoint answers 503 and meeples falls back to its download button.
+
+1. Generate a secret of at least 32 characters:
+
+   ```
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+   ```
+
+2. In the Vercel project, add it as `MEEPLES_IMPORT_SECRET` (Production; Preview too if you test there), and redeploy. Check that `APP_URL` is the site's real address: the links sent back to meeples are built from it.
+3. In meeples' Cloudflare Pages project, set the **same value** as `ARCS_LEAGUE_SECRET`, and `ARCS_LEAGUE_URL` to the site's address (no trailing slash):
+
+   ```
+   npx wrangler pages secret put ARCS_LEAGUE_SECRET --project-name=meeples
+   npx wrangler pages secret put ARCS_LEAGUE_URL --project-name=meeples
+   ```
+
+4. Finish an act on meeples (or press "Send again"). The first act of a campaign appears at **/imports** for a player to say who is who; after that, acts save on their own.
+
+To change the secret, set the new value in both places.
 
 ## Local development
 

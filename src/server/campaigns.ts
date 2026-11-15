@@ -72,13 +72,14 @@ function parse<T extends z.ZodTypeAny>(schema: T, input: unknown): z.infer<T> {
   return r.data;
 }
 
+/** `actor` null means the site itself, e.g. an import saved automatically. */
 export async function audit(
   db: DbOrTx,
-  actor: Actor,
+  actor: Actor | null,
   e: { action: string; entityType: string; entityId: string | number; campaignId?: number | null; before?: unknown; after?: unknown },
 ) {
   await db.insert(auditLog).values({
-    actorId: actor.playerId,
+    actorId: actor?.playerId ?? null,
     action: e.action,
     entityType: e.entityType,
     entityId: String(e.entityId),
@@ -135,7 +136,17 @@ export const createCampaignInput = z.object({
 });
 export type CreateCampaignInput = z.input<typeof createCampaignInput>;
 
-export async function createCampaign(db: DB, actor: Actor, raw: unknown): Promise<number> {
+export interface CreateCampaignOptions {
+  /** Set when the campaign comes from an import, so the platform's later acts attach to it. */
+  source?: { platform: string; key: string };
+}
+
+export async function createCampaign(
+  db: DbOrTx,
+  actor: Actor,
+  raw: unknown,
+  opts: CreateCampaignOptions = {},
+): Promise<number> {
   const input = parse(createCampaignInput, raw);
 
   const sizeErrors = validateTableSize(input.players.length).map((v) => v.message);
@@ -199,6 +210,8 @@ export async function createCampaign(db: DB, actor: Actor, raw: unknown): Promis
         seasonId: input.seasonId ?? null,
         playerCount: resolved.length,
         createdById: actor.playerId,
+        sourcePlatform: opts.source?.platform ?? null,
+        sourceCampaignKey: opts.source?.key ?? null,
       })
       .returning();
     let title = c.title;
@@ -214,7 +227,12 @@ export async function createCampaign(db: DB, actor: Actor, raw: unknown): Promis
       entityType: "campaign",
       entityId: c.id,
       campaignId: c.id,
-      after: { title, seasonId: input.seasonId ?? null, players: resolved.map((r) => r.name) },
+      after: {
+        title,
+        seasonId: input.seasonId ?? null,
+        players: resolved.map((r) => r.name),
+        ...(opts.source ? { source: opts.source } : {}),
+      },
     });
     return c.id;
   });
@@ -266,6 +284,8 @@ export interface CampaignDetail {
   winnerOverrideReason: string | null;
   voidReason: string | null;
   discordThreadId: string | null;
+  /** Where it was played, when it came in by import ("meeples", ...). */
+  sourcePlatform: string | null;
   /** Photos are members-only unless this is set. */
   photosPublic: boolean;
   createdAt: Date;
@@ -359,6 +379,7 @@ export async function getCampaign(db: DbOrTx, id: number, now = new Date()): Pro
     winnerOverrideReason: camp.winnerOverrideReason,
     voidReason: camp.voidReason,
     discordThreadId: camp.discordThreadId,
+    sourcePlatform: camp.sourcePlatform,
     photosPublic: camp.photosPublic,
     createdAt: camp.createdAt,
     closedAt: camp.closedAt,
@@ -443,13 +464,29 @@ function actSnapshot(
 }
 
 export async function saveAct(
-  db: DB,
+  db: DbOrTx,
   actor: Actor,
   campaignId: number,
   actNo: ActNumber,
   raw: unknown,
   now = new Date(),
-): Promise<{ closed: boolean }> {
+): Promise<{ closed: boolean; actId: number }> {
+  return saveActAs(db, actor, campaignId, actNo, raw, now);
+}
+
+/**
+ * Saves an act. `actor` null is the site itself saving an import that needed no
+ * confirmation: it may only record the next act of an in-progress campaign,
+ * never edit a saved one, and is audit-logged with no actor.
+ */
+export async function saveActAs(
+  db: DbOrTx,
+  actor: Actor | null,
+  campaignId: number,
+  actNo: ActNumber,
+  raw: unknown,
+  now = new Date(),
+): Promise<{ closed: boolean; actId: number }> {
   if (![1, 2, 3].includes(actNo)) throw new NotFoundError("There are only three acts.");
   const input = parse(actInput, raw);
 
@@ -460,7 +497,13 @@ export async function saveAct(
     if (!detail) throw new NotFoundError("Campaign not found.");
 
     const existing = detail.acts.find((a) => a.actNo === actNo);
-    if (existing) {
+    if (!actor) {
+      if (existing) throw new RuleError([`Act ${actNo} is already saved.`]);
+      if (detail.status !== "in_progress") throw new RuleError(["This campaign is not in progress."]);
+      if (actNo !== detail.acts.length + 1) {
+        throw new RuleError([`Record Act ${["I", "II"][detail.acts.length] ?? "III"} first.`]);
+      }
+    } else if (existing) {
       if (!canEditAct(actor, detail.access, existing.createdAt, now)) {
         throw new PermissionError(
           isParticipant(actor, detail.access)
@@ -548,13 +591,13 @@ export async function saveAct(
     if (existing) {
       await tx
         .update(acts)
-        .set({ ...values, updatedById: actor.playerId, updatedAt: now })
+        .set({ ...values, updatedById: actor?.playerId ?? null, updatedAt: now })
         .where(eq(acts.id, existing.id));
       actId = existing.id;
     } else {
       const [row] = await tx
         .insert(acts)
-        .values({ ...values, campaignId, actNo, createdById: actor.playerId, createdAt: now, updatedAt: now })
+        .values({ ...values, campaignId, actNo, createdById: actor?.playerId ?? null, createdAt: now, updatedAt: now })
         .returning({ id: acts.id });
       actId = row.id;
     }
@@ -617,7 +660,7 @@ export async function saveAct(
         after: { status: "closed", winners: decision!.winners },
       });
     }
-    return { closed };
+    return { closed, actId };
   });
 }
 

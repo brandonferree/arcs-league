@@ -229,7 +229,10 @@ describe("filters", () => {
       to: null,
       seasonId: 2,
       playerCount: null,
+      platform: null,
     });
+    expect(parseStatsFilters({ played: "meeples" }).platform).toBe("meeples");
+    expect(parseStatsFilters({ played: "mars" }).platform).toBeNull();
   });
 
   it("round-trips to a query string", () => {
@@ -237,5 +240,6 @@ describe("filters", () => {
     expect(filterQuery(f)).toBe("?to=2026-12-31&players=4");
     expect(filterQuery(f, { min: 3 })).toBe("?to=2026-12-31&players=4&min=3");
     expect(filterQuery(parseStatsFilters({}))).toBe("");
+    expect(filterQuery(parseStatsFilters({ played: "manual" }))).toBe("?played=manual");
   });
 });
