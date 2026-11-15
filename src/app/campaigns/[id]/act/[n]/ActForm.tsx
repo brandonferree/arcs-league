@@ -26,6 +26,14 @@ export interface FormPlayer {
   name: string;
 }
 type PriorEntry = { fate: string; success: boolean | null; score: number };
+
+/** A whole number from -999 to 999: power can go negative after a failed objective. */
+const SCORE_RE = /^-?\d{1,3}$/;
+/** Keeps a leading minus and up to three digits. */
+function cleanScore(value: string): string {
+  const digits = value.replace(/[^\d]/g, "").slice(0, 3);
+  return (value.trim().startsWith("-") ? "-" : "") + digits;
+}
 export interface ActFormProps {
   campaignId: number;
   actNo: ActNumber;
@@ -140,7 +148,7 @@ export function ActForm(props: ActFormProps) {
     const r = rows[p.cpId];
     const missing: string[] = [];
     if (!fateById.has(r.fateId)) missing.push("fate");
-    if (r.score === "" || !/^\d{1,3}$/.test(r.score.trim())) missing.push("score (a whole number, 0 or more)");
+    if (!SCORE_RE.test(r.score.trim())) missing.push("score (a whole number; use ± for a negative score)");
     if (actNo < 3 && r.success === "") missing.push("whether the fate succeeded");
     if (missing.length) {
       incompleteNames.add(p.name);
@@ -153,7 +161,7 @@ export function ActForm(props: ActFormProps) {
   if (vodUrl.trim() && !/^https?:\/\/\S+$/i.test(vodUrl.trim())) fieldErrors.push("VOD link must start with http:// or https://.");
 
   // ---- Winner (Act III) ----
-  const scoresComplete = players.every((p) => /^\d{1,3}$/.test(rows[p.cpId].score.trim()));
+  const scoresComplete = players.every((p) => SCORE_RE.test(rows[p.cpId].score.trim()));
   const act3 = players.map((p) => ({ name: p.name, score: Number(rows[p.cpId].score) }));
   const defaultWinnerNames = actNo === 3 && scoresComplete ? campaignWinners(act3) : [];
   const winnerDecision =
@@ -302,14 +310,26 @@ export function ActForm(props: ActFormProps) {
               </label>
               <label className="field">
                 <span className="field__label">Score</span>
-                <input
-                  className="input input--score"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={r.score}
-                  aria-invalid={(submitted && !/^\d{1,3}$/.test(r.score.trim())) || undefined}
-                  onChange={(e) => setRow(p.cpId, { score: e.target.value.replace(/[^\d]/g, "").slice(0, 3) })}
-                />
+                <span className="score-entry">
+                  <input
+                    className="input input--score"
+                    inputMode="numeric"
+                    value={r.score}
+                    aria-invalid={(submitted && !SCORE_RE.test(r.score.trim())) || undefined}
+                    onChange={(e) => setRow(p.cpId, { score: cleanScore(e.target.value) })}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn--quiet btn--small"
+                    aria-label={`Make ${p.name}'s score ${r.score.startsWith("-") ? "positive" : "negative"}`}
+                    title="Switch between positive and negative"
+                    onClick={() =>
+                      setRow(p.cpId, { score: r.score.startsWith("-") ? r.score.slice(1) : `-${r.score}` })
+                    }
+                  >
+                    ±
+                  </button>
+                </span>
               </label>
               {actNo < 3 ? (
                 <div className="field" role="radiogroup" aria-labelledby={`${id}-succ`}>

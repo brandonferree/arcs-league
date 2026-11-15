@@ -1,0 +1,163 @@
+{
+  "format": "arcs-league-act-summary",
+  "version": 1,
+  "source": {
+    "platform": "meeples",
+    "gameId": "samplegame0001",
+    "url": "https://meeples.example/play/arcs-br/samplegame0001",
+    "exportedAt": "2026-11-15T02:51:30Z"
+  },
+  "act": 2,
+  "datePlayed": "2026-11-14",
+  "players": [
+    {
+      "name": "Player 1",
+      "discordId": null,
+      "color": "Blue",
+      "seat": 1,
+      "fate": {
+        "name": "Steward",
+        "cardId": "ARCS-FATE01"
+      },
+      "score": 36,
+      "success": true,
+      "winner": null,
+      "favors": {
+        "Yellow": 1
+      },
+      "tableau": [
+        {
+          "cardId": "ARCS-F102",
+          "name": "Imperial Authority"
+        },
+        {
+          "cardId": "ARCS-F103",
+          "name": "Dealmakers"
+        },
+        {
+          "cardId": "ARCS-F107",
+          "name": "Hunter Squads"
+        }
+      ],
+      "powerBeforePenalty": 36,
+      "objectiveShortfall": 0
+    },
+    {
+      "name": "Player 2",
+      "discordId": null,
+      "color": "Yellow",
+      "seat": 2,
+      "fate": {
+        "name": "Hegemon",
+        "cardId": "ARCS-FATE10"
+      },
+      "score": 4,
+      "success": false,
+      "winner": null,
+      "favors": {},
+      "tableau": [
+        {
+          "cardId": "ARCS-L04",
+          "name": "Mirror Plating"
+        },
+        {
+          "cardId": "ARCS-F1004",
+          "name": "Song of the Banner"
+        }
+      ],
+      "powerBeforePenalty": 12,
+      "objectiveShortfall": 8
+    },
+    {
+      "name": "Player 3",
+      "discordId": null,
+      "color": "Red",
+      "seat": 3,
+      "fate": {
+        "name": "Pirate",
+        "cardId": "ARCS-FATE12"
+      },
+      "score": 29,
+      "success": true,
+      "winner": null,
+      "favors": {
+        "White": 1
+      },
+      "tableau": [
+        {
+          "cardId": "ARCS-F1202",
+          "name": "Pirate Hoard"
+        },
+        {
+          "cardId": "ARCS-F302",
+          "name": "Merchant League"
+        },
+        {
+          "cardId": "ARCS-CC02",
+          "name": "Construction Union"
+        },
+        {
+          "cardId": "ARCS-F1203",
+          "name": "Pirate Fleet"
+        },
+        {
+          "cardId": "ARCS-F709",
+          "name": "Court Enforcers"
+        },
+        {
+          "cardId": "ARCS-F307",
+          "name": "Material Cartel"
+        },
+        {
+          "cardId": "ARCS-CC08",
+          "name": "Silver Tongues"
+        }
+      ],
+      "powerBeforePenalty": 29,
+      "objectiveShortfall": 0
+    },
+    {
+      "name": "Player 4",
+      "discordId": null,
+      "color": "White",
+      "seat": 4,
+      "fate": {
+        "name": "Blight Speaker",
+        "cardId": "ARCS-FATE13"
+      },
+      "score": -5,
+      "success": false,
+      "winner": null,
+      "favors": {},
+      "tableau": [
+        {
+          "cardId": "ARCS-L01",
+          "name": "Tool Priests"
+        },
+        {
+          "cardId": "ARCS-F202",
+          "name": "Parade Fleets"
+        },
+        {
+          "cardId": "ARCS-F1302",
+          "name": "Spore Ships"
+        },
+        {
+          "cardId": "ARCS-F208",
+          "name": "Construction Union"
+        },
+        {
+          "cardId": "ARCS-F308",
+          "name": "Fuel Cartel"
+        },
+        {
+          "cardId": "ARCS-F209",
+          "name": "Construction Union"
+        }
+      ],
+      "powerBeforePenalty": 8,
+      "objectiveShortfall": 13
+    }
+  ],
+  "notes": "meeples game \"Sample campaign\""
+}

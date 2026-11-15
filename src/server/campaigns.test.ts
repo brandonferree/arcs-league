@@ -215,6 +215,16 @@ describe("rule violations are blocked on save", () => {
     await expectRuleError(saveAct(db, actor("Emma"), id, 1, { playedOn: "2026-11-01", results: ok.slice(1) }), "each player");
     await expectRuleError(saveAct(db, actor("Emma"), id, 1, { playedOn: "nope", results: ok }), "YYYY-MM-DD");
   });
+
+  it("accepts negative scores (a failed objective's penalty) within -999..999", async () => {
+    const c = (await getCampaign(db, id))!;
+    await expect(
+      saveAct(db, actor("Emma"), id, 1, { playedOn: "2026-11-01", results: results(c, [["Steward", -1000, false], ["Founder", 4, true], ["Magnate", 6, true]]) }),
+    ).rejects.toThrow();
+    await saveAct(db, actor("Emma"), id, 1, { playedOn: "2026-11-01", results: results(c, [["Steward", -5, false], ["Founder", 4, true], ["Magnate", 6, true]]) });
+    const saved = (await getCampaign(db, id))!;
+    expect(JSON.stringify(saved)).toContain('"score":-5');
+  });
 });
 
 describe("permissions and the edit window", () => {

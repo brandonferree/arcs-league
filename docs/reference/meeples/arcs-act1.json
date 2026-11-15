@@ -1,0 +1,139 @@
+{
+  "format": "arcs-league-act-summary",
+  "version": 1,
+  "source": {
+    "platform": "meeples",
+    "gameId": "samplegame0001",
+    "url": "https://meeples.example/play/arcs-br/samplegame0001",
+    "exportedAt": "2026-11-15T02:50:26Z"
+  },
+  "act": 1,
+  "datePlayed": "2026-11-02",
+  "players": [
+    {
+      "name": "Player 1",
+      "discordId": null,
+      "color": "Blue",
+      "seat": 1,
+      "fate": {
+        "name": "Steward",
+        "cardId": "ARCS-FATE01"
+      },
+      "score": 29,
+      "success": true,
+      "winner": null,
+      "favors": {},
+      "tableau": [
+        {
+          "cardId": "ARCS-F102",
+          "name": "Imperial Authority"
+        },
+        {
+          "cardId": "ARCS-F103",
+          "name": "Dealmakers"
+        },
+        {
+          "cardId": "ARCS-CC04",
+          "name": "Shipping Interest"
+        }
+      ],
+      "powerBeforePenalty": 29,
+      "objectiveShortfall": 0
+    },
+    {
+      "name": "Player 2",
+      "discordId": null,
+      "color": "Yellow",
+      "seat": 2,
+      "fate": {
+        "name": "Admiral",
+        "cardId": "ARCS-FATE07"
+      },
+      "score": 2,
+      "success": false,
+      "winner": null,
+      "favors": {},
+      "tableau": [
+        {
+          "cardId": "ARCS-L04",
+          "name": "Mirror Plating"
+        },
+        {
+          "cardId": "ARCS-F702",
+          "name": "Imperial Officers"
+        }
+      ],
+      "powerBeforePenalty": 7,
+      "objectiveShortfall": 5
+    },
+    {
+      "name": "Player 3",
+      "discordId": null,
+      "color": "Red",
+      "seat": 3,
+      "fate": {
+        "name": "Magnate",
+        "cardId": "ARCS-FATE03"
+      },
+      "score": 10,
+      "success": false,
+      "winner": null,
+      "favors": {},
+      "tableau": [
+        {
+          "cardId": "ARCS-F302",
+          "name": "Merchant League"
+        },
+        {
+          "cardId": "ARCS-CC06",
+          "name": "Arms Union"
+        },
+        {
+          "cardId": "ARCS-CC09",
+          "name": "Sworn Guardians"
+        },
+        {
+          "cardId": "ARCS-CC02",
+          "name": "Construction Union"
+        },
+        {
+          "cardId": "ARCS-CC01",
+          "name": "Mining Interest"
+        },
+        {
+          "cardId": "ARCS-CC10",
+          "name": "Elder Broker"
+        }
+      ],
+      "powerBeforePenalty": 12,
+      "objectiveShortfall": 2
+    },
+    {
+      "name": "Player 4",
+      "discordId": null,
+      "color": "White",
+      "seat": 4,
+      "fate": {
+        "name": "Founder",
+        "cardId": "ARCS-FATE02"
+      },
+      "score": 3,
+      "success": false,
+      "winner": null,
+      "favors": {},
+      "tableau": [
+        {
+          "cardId": "ARCS-L01",
+          "name": "Tool Priests"
+        },
+        {
+          "cardId": "ARCS-F202",
+          "name": "Parade Fleets"
+        }
+      ],
+      "powerBeforePenalty": 5,
+      "objectiveShortfall": 2
+    }
+  ],
+  "notes": "meeples game \"Sample campaign\""
+}

@@ -54,7 +54,7 @@ Decided (2026-11-14, owner left the choice to Claude): **Discord is the front do
 
 ## Open questions for the owner
 
-1. **meeples sample file.** Once meeples has its export, commit a real sample to `docs/reference/` here for the importer tests.
+1. ~~meeples sample file~~: done. meeples' export landed (meeples `95aa68a`); anonymised samples are in `docs/reference/meeples/`. Act scores may be negative (owner, 2026-11-14); the act form and server now accept −999 to 999.
 2. **TTS.** Does the TTS mod save a file (it could write the same JSON from Lua), or are TTS games read from a screenshot like in-person ones? Send a sample.
 3. **In-person screenshot.** What does it show: a score pad, a photo of the board, a companion app? Send a sample.
 4. **Vision model and budget.** Reading screenshots needs a vision model, which breaks the $0 budget unless it fits in Vercel AI Gateway's monthly free credit. Accept that, or only store the screenshot with the act and keep typing numbers?

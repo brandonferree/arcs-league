@@ -57,7 +57,7 @@ A campaign can also be created directly on the web without the lobby.
 
 Per act, per player:
 
-- **Required:** fate, score, success (Acts I and II only)
+- **Required:** fate, score, success (Acts I and II only). The score is power at the end of the act, after any failed-objective penalty, so it can be negative (owner, 2026-11-14).
 - **Optional:** seat/initiative order
 
 Per act:

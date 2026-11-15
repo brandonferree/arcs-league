@@ -408,7 +408,8 @@ export const actInput = z.object({
     z.object({
       campaignPlayerId: z.number().int().positive(),
       fateId: z.number().int().positive("Choose a fate"),
-      score: z.number().int("Score must be a whole number").min(0, "Score cannot be negative").max(999),
+      // Power can be negative after a failed objective's penalty (owner, 2026-11-14).
+      score: z.number().int("Score must be a whole number").min(-999).max(999),
       success: z.boolean().nullable().optional(),
       seat: z.number().int().min(1).max(4).nullable().optional(),
     }),
