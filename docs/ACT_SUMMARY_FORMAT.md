@@ -53,6 +53,7 @@ Status: agreed 2026-11-14, not yet built on either side. Build order in meeples:
 | `version` | yes | Integer, `1`. |
 | `source.platform` | yes | `"meeples"`, `"tts"` or `"screenshot"`. Stored on the act for filtering and audit. |
 | `source.gameId` | meeples, TTS | The game's id on that platform. The league stores it on the campaign so Acts II and III attach to the same campaign. |
+| `source.campaignGameId` | no | If Acts II and III are played as new games on the platform (meeples has a "Continue from Act II" setup), the `gameId` of the game where this campaign's Act I was played, so the league can keep the acts together. Omit when all acts share one game. |
 | `source.url` | no | Link back to the game or replay. |
 | `source.exportedAt` | yes | ISO 8601 UTC. |
 | `leagueCampaign` | no | The league campaign's URL (or its numeric id), entered in meeples when the game is set up. If absent, the league matches Acts II and III by `source.gameId`, and an Act I with no match starts a new campaign once a player confirms it. |

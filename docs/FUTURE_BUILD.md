@@ -8,7 +8,7 @@ Owner's request (2026-11-14): fill in act results automatically instead of typin
 
 `brandonferree/ARCSdiscord` is not used for this; async games are played on meeples (owner, 2026-11-14).
 
-Nothing here is built. The file format and push contract are in `docs/ACT_SUMMARY_FORMAT.md`; meeples builds its export first.
+Nothing here is built. The file format and push contract are in `docs/ACT_SUMMARY_FORMAT.md`; meeples builds its export first, from the prompt in `docs/handoff/MEEPLES_HANDOFF.md`.
 
 ## Findings so far
 
