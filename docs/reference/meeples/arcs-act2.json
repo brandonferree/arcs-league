@@ -19,7 +19,7 @@
         "name": "Steward",
         "cardId": "ARCS-FATE01"
       },
-      "score": 36,
+      "score": 18,
       "success": true,
       "winner": null,
       "favors": {
@@ -40,7 +40,8 @@
         }
       ],
       "powerBeforePenalty": 36,
-      "objectiveShortfall": 0
+      "objectiveShortfall": 0,
+      "scoreBeforeHalving": 36
     },
     {
       "name": "Player 2",
@@ -51,7 +52,7 @@
         "name": "Hegemon",
         "cardId": "ARCS-FATE10"
       },
-      "score": 4,
+      "score": 2,
       "success": false,
       "winner": null,
       "favors": {},
@@ -66,7 +67,8 @@
         }
       ],
       "powerBeforePenalty": 12,
-      "objectiveShortfall": 8
+      "objectiveShortfall": 8,
+      "scoreBeforeHalving": 4
     },
     {
       "name": "Player 3",
@@ -77,7 +79,7 @@
         "name": "Pirate",
         "cardId": "ARCS-FATE12"
       },
-      "score": 29,
+      "score": 15,
       "success": true,
       "winner": null,
       "favors": {
@@ -114,7 +116,8 @@
         }
       ],
       "powerBeforePenalty": 29,
-      "objectiveShortfall": 0
+      "objectiveShortfall": 0,
+      "scoreBeforeHalving": 29
     },
     {
       "name": "Player 4",
@@ -156,7 +159,8 @@
         }
       ],
       "powerBeforePenalty": 8,
-      "objectiveShortfall": 13
+      "objectiveShortfall": 13,
+      "scoreBeforeHalving": -5
     }
   ],
   "notes": "meeples game \"Sample campaign\""

@@ -67,7 +67,7 @@ Status: agreed 2026-11-14. meeples export built (meeples `95aa68a`); league endp
 | `players[].seat` | no | 1-based seat / initiative order at the end of the act. |
 | `players[].fate.name` | yes | Exact fate name as in `DESIGN.md` section 3 (e.g. `"Planet Breaker"`, `"Gate Wraith"`). |
 | `players[].fate.cardId` | no | Buried Giant id `ARCS-FATE01`–`24`. Preferred when known. |
-| `players[].score` | yes | Power at the end of the act, integer, −999 to 999. Acts I and II: power **after** the penalty for a failed objective and **before** the intermission halving, so it **can be negative** (owner, 2026-11-14). Act III: final power. |
+| `players[].score` | yes | Power at the end of the act, integer, −999 to 999. Acts I and II: power **after** the penalty for a failed objective **and after** the intermission halving, i.e. the power the player starts the next act with (owner, 2026-11-14). The game's rule: power above 1 becomes half, rounded up; 1, 0 and negative power stay as they are, so it **can be negative**. Act III: final power. Producers may add the unhalved value as an extra field such as `scoreBeforeHalving`. |
 | `players[].success` | Acts I, II | Did the player meet their fate's objective. Omit or `null` in Act III. |
 | `players[].winner` | no | Act III only: `true` for the winner(s) when the game knows it (a C fate can win on its objective regardless of points). `null` lets the league default to highest score. |
 | `players[].favors` | no | Favors the player held at the end of the act: other players' agents, counted by the colour of the player they belong to, e.g. `{ "Blue": 2, "White": 1 }`. `{}` when they held none. Taken at the moment the act ends, before fates are resolved. |

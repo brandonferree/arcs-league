@@ -91,7 +91,7 @@ describe("confirming and automatic saves", () => {
     let c = (await getCampaign(db, campaignId))!;
     expect(c.players.map((p) => p.name)).toEqual(["Ada", "Ben", "Player 3", "Player 4"]);
     expect(c.acts[0].playedOn).toBe("2026-11-02");
-    expect(Object.values(c.acts[0].results).map((r) => r.score)).toEqual([29, 2, 10, 3]);
+    expect(Object.values(c.acts[0].results).map((r) => r.score)).toEqual([15, 1, 5, 2]);
     const [camp] = await db.select().from(campaigns).where(eq(campaigns.id, campaignId));
     expect(camp).toMatchObject({ sourcePlatform: "meeples", sourceCampaignKey: "samplegame0001" });
     expect((await db.select().from(actImports).where(eq(actImports.id, importId)))[0]).toMatchObject({
@@ -134,10 +134,10 @@ describe("confirming and automatic saves", () => {
     expect(again).toEqual(first);
 
     const changed = act2();
-    changed.players[0].score = 40;
+    changed.players[0].score = 20;
     expect(await receiveImport(db, changed)).toMatchObject({ status: "conflict", campaignId, actNo: 2 });
     const c = (await getCampaign(db, campaignId))!;
-    expect(c.acts.find((a) => a.actNo === 2)!.results[c.players[0].cpId].score).toBe(36);
+    expect(c.acts.find((a) => a.actNo === 2)!.results[c.players[0].cpId].score).toBe(18);
     expect(await listImports(db, { status: "pending" })).toHaveLength(1);
   });
 

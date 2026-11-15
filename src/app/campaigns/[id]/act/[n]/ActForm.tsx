@@ -264,6 +264,11 @@ export function ActForm(props: ActFormProps) {
             {actNo > 1 ? "; A fates only if kept from the last act" : ""}.
           </span>
         </div>
+        <p className="small muted" style={{ marginTop: 0 }}>
+          {actNo < 3
+            ? "Score: power after halving for the next act (above 1 is halved, rounded up), i.e. what the player starts the next act with. Use ± for a negative score."
+            : "Score: final power at the end of the game. Use ± for a negative score."}
+        </p>
         {players.map((p) => {
           const r = rows[p.cpId];
           const prev = actNo > 1 ? otherActs[(actNo - 1) as ActNumber]?.[p.cpId] : undefined;

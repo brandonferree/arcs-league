@@ -19,7 +19,7 @@
         "name": "Steward",
         "cardId": "ARCS-FATE01"
       },
-      "score": 29,
+      "score": 15,
       "success": true,
       "winner": null,
       "favors": {},
@@ -38,7 +38,8 @@
         }
       ],
       "powerBeforePenalty": 29,
-      "objectiveShortfall": 0
+      "objectiveShortfall": 0,
+      "scoreBeforeHalving": 29
     },
     {
       "name": "Player 2",
@@ -49,7 +50,7 @@
         "name": "Admiral",
         "cardId": "ARCS-FATE07"
       },
-      "score": 2,
+      "score": 1,
       "success": false,
       "winner": null,
       "favors": {},
@@ -64,7 +65,8 @@
         }
       ],
       "powerBeforePenalty": 7,
-      "objectiveShortfall": 5
+      "objectiveShortfall": 5,
+      "scoreBeforeHalving": 2
     },
     {
       "name": "Player 3",
@@ -75,7 +77,7 @@
         "name": "Magnate",
         "cardId": "ARCS-FATE03"
       },
-      "score": 10,
+      "score": 5,
       "success": false,
       "winner": null,
       "favors": {},
@@ -106,7 +108,8 @@
         }
       ],
       "powerBeforePenalty": 12,
-      "objectiveShortfall": 2
+      "objectiveShortfall": 2,
+      "scoreBeforeHalving": 10
     },
     {
       "name": "Player 4",
@@ -117,7 +120,7 @@
         "name": "Founder",
         "cardId": "ARCS-FATE02"
       },
-      "score": 3,
+      "score": 2,
       "success": false,
       "winner": null,
       "favors": {},
@@ -132,7 +135,8 @@
         }
       ],
       "powerBeforePenalty": 5,
-      "objectiveShortfall": 2
+      "objectiveShortfall": 2,
+      "scoreBeforeHalving": 3
     }
   ],
   "notes": "meeples game \"Sample campaign\""
