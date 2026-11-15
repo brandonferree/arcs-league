@@ -2,7 +2,7 @@
 
 The contract between the games that produce results (the owner's **meeples** site, Tabletop Simulator, screenshot reading) and this league site, which imports them. One file describes **one act** of one campaign. Copy this file into the meeples repo as the spec for its export; change it here first and bump `version` if it changes.
 
-Status: proposed 2026-11-14, not yet built on either side. See `docs/FUTURE_BUILD.md`.
+Status: agreed 2026-11-14, not yet built on either side. Build order in meeples: produce the JSON and the download button first, then the push. See `docs/FUTURE_BUILD.md`.
 
 ## Why JSON, one act per file
 
@@ -22,6 +22,7 @@ Status: proposed 2026-11-14, not yet built on either side. See `docs/FUTURE_BUIL
     "url": "https://meeples.example/arcs-br/game/a1b2c3",
     "exportedAt": "2026-11-14T21:03:00Z"
   },
+  "leagueCampaign": "https://<league-site>/campaigns/42",
   "act": 2,
   "datePlayed": "2026-11-14",
   "players": [
@@ -54,6 +55,7 @@ Status: proposed 2026-11-14, not yet built on either side. See `docs/FUTURE_BUIL
 | `source.gameId` | meeples, TTS | The game's id on that platform. The league stores it on the campaign so Acts II and III attach to the same campaign. |
 | `source.url` | no | Link back to the game or replay. |
 | `source.exportedAt` | yes | ISO 8601 UTC. |
+| `leagueCampaign` | no | The league campaign's URL (or its numeric id), entered in meeples when the game is set up. If absent, the league matches Acts II and III by `source.gameId`, and an Act I with no match starts a new campaign once a player confirms it. |
 | `act` | yes | 1, 2 or 3. |
 | `datePlayed` | yes | `YYYY-MM-DD`, the day the act ended. |
 | `players` | yes | 3 or 4 entries (league rule 8). |
@@ -70,6 +72,40 @@ Status: proposed 2026-11-14, not yet built on either side. See `docs/FUTURE_BUIL
 | `notes` | no | Free text copied into the act's notes. |
 
 Unknown extra fields are ignored, so producers can add data the league does not use yet.
+
+## Delivery
+
+Decided (owner, 2026-11-14): **meeples pushes** each act to the league when it ends, and also offers a **download** of the same JSON as a backup. Other producers (TTS, screenshots) use upload on the league's act form.
+
+### Push (meeples only)
+
+```
+POST <LEAGUE_URL>/api/import/act
+Authorization: Bearer <secret>
+Content-Type: application/json
+
+<the act summary JSON, at most 64 KB>
+```
+
+- **Send it from the server, never the browser.** meeples' game logic runs in the player's browser, where any secret is readable. The browser hands the summary to a meeples Cloudflare Pages Function, which adds the `Authorization` header and forwards it. The secret lives in Cloudflare (meeples) and Vercel (league) environment variables only, never in either repo.
+- **Idempotent.** The league keys an import on `source.platform` + `source.gameId` + `act`. Sending the same act again replaces a pending import; it never creates a duplicate.
+- **Retry** on network errors and 5xx, with backoff (for example 1 min, 5 min, 30 min, then give up). Do not retry 4xx.
+
+Responses (JSON body):
+
+| Status | Body | Meaning |
+|---|---|---|
+| `202` | `{ "status": "pending", "confirmUrl": "…" }` | Received; a player must confirm on the site (first time a name is seen, or a rule problem). meeples can show the link. |
+| `201` | `{ "status": "saved", "actUrl": "…" }` | Saved directly: every player matched a known member or remembered alias and the fate rules passed. |
+| `400` | `{ "status": "invalid", "errors": [ … ] }` | Not a valid v1 summary. |
+| `401` | `{ "status": "unauthorized" }` | Missing or wrong secret. |
+| `409` | `{ "status": "conflict", "actUrl": "…" }` | That act is already saved with different results; a moderator must sort it out on the site. |
+
+### Download (backup, and any producer)
+
+An "Export for ARCS League" button that downloads `arcs-<gameId>-act<N>.json` and copies the same text to the clipboard. The league's act form accepts the file or a paste. Use it when a push fails, and to test the export before the push exists.
+
+TTS cannot hold a secret either (the mod is shared with players), so TTS uses download/upload, not push.
 
 ## Rules the producer does not need to enforce
 
