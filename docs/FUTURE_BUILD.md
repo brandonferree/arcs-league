@@ -18,7 +18,7 @@ Nothing here is built. The file format and push contract are in `docs/ACT_SUMMAR
 
 ## Recommended approach
 
-**One JSON format for every source** (`docs/ACT_SUMMARY_FORMAT.md`). meeples writes it, a TTS mod could write it, and screenshot reading asks a vision model to return it. The league has one importer: parse with zod, match players and fates, run the fate validator, and open the act form **prefilled for a player to confirm**. Nothing is saved unseen.
+**One JSON format for every source** (`docs/ACT_SUMMARY_FORMAT.md`). meeples writes it, a TTS mod could write it, and screenshot reading asks a vision model to return it. The league has one importer: parse with zod, match players and fates, run the fate validator, and show the result **for a player to confirm** (in Discord, or on the site's prefilled act form). Only a clean meeples push may skip confirmation (question 5).
 
 ### How the summary reaches the site
 
