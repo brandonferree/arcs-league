@@ -75,7 +75,7 @@ Unknown extra fields are ignored, so producers can add data the league does not 
 
 ## Delivery
 
-Decided (owner, 2026-11-14): **meeples pushes** each act to the league when it ends, and also offers a **download** of the same JSON as a backup. Other producers (TTS, screenshots) use upload on the league's act form.
+Decided (owner, 2026-11-14): **meeples pushes** each act to the league when it ends, and also offers a **download** of the same JSON as a backup. Everything a person hands over (TTS files, screenshots, a downloaded meeples JSON) goes through the league's Discord bot in the campaign thread: `/campaign import` with the file attached, or the "Send to ARCS League" message command on a message that has it. See `docs/FUTURE_BUILD.md`.
 
 ### Push (meeples only)
 
@@ -103,9 +103,9 @@ Responses (JSON body):
 
 ### Download (backup, and any producer)
 
-An "Export for ARCS League" button that downloads `arcs-<gameId>-act<N>.json` and copies the same text to the clipboard. The league's act form accepts the file or a paste. Use it when a push fails, and to test the export before the push exists.
+An "Export for ARCS League" button that downloads `arcs-<gameId>-act<N>.json` and copies the same text to the clipboard. A player posts the file in the campaign's Discord thread and sends it to the league with the bot. Use it when a push fails, and to test the export before the push exists.
 
-TTS cannot hold a secret either (the mod is shared with players), so TTS uses download/upload, not push.
+TTS cannot hold a secret either (the mod is shared with players), so TTS goes through Discord, not push.
 
 ## Rules the producer does not need to enforce
 

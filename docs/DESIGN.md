@@ -155,6 +155,7 @@ Motion: slow parallax drift on the background only, nothing pulsing, all of it d
 - `/campaign start`: lobby with Join / Leave / Start
 - `/campaign status`: open campaigns
 - `/stats player`, `/stats fate`: short summary with a link to the site
+- `/campaign import` (file attached) and the message command "Send to ARCS League": import an act from a screenshot or summary file in the campaign's thread, confirmed with buttons (2026-11-14; see `docs/FUTURE_BUILD.md`)
 - Result card in the thread after each act; final announcement in `#arcs` on close
 
 Commands and threads are confined to `#arcs`. No scheduling features.
@@ -175,7 +176,7 @@ Phase 1 matters most: the league has no real games yet, and every later phase is
 ### Decided after the interview
 
 - **The owner's async-play bot (`brandonferree/ARCSdiscord`) stays separate** (owner, 2026-11-13). Games played there do not flow into this site, so there is no write API; campaigns are logged only through the web form and, from phase 3, this site's own bot.
-- **Importing results** (owner, 2026-11-14): async games are played on the owner's meeples site (not ARCSdiscord) and should be imported from a summary file the game produces; TTS games captured too; in-person games read from a screenshot. meeples pushes each act to the league, with a JSON download as backup; this adds one write endpoint, for meeples only. Not built; proposed format and open questions in `docs/ACT_SUMMARY_FORMAT.md` and `docs/FUTURE_BUILD.md`.
+- **Importing results** (owner, 2026-11-14): async games are played on the owner's meeples site (not ARCSdiscord) and should be imported from a summary file the game produces; TTS games captured too; in-person games read from a screenshot. meeples pushes each act to the league, with a JSON download as backup; this adds one write endpoint, for meeples only. Screenshots and TTS files come in through the Discord bot. Not built; proposed format and open questions in `docs/ACT_SUMMARY_FORMAT.md` and `docs/FUTURE_BUILD.md`.
 - **Automatic campaign titles** are "Campaign #N" (owner, 2026-11-13).
 - **Reigning champion** is the member with the most wins in closed campaigns, ties broken by win rate (owner, 2026-11-13).
 - **Photos were built before the bot** (owner, 2026-11-14). Players in a campaign (and moderators) add, replace and remove its photos and switch them public, at any time except on a void campaign; to confirm with the owner. See `docs/PHASE4_REPORT.md`.
