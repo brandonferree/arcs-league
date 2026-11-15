@@ -35,6 +35,7 @@ Status: agreed 2026-11-14, not yet built on either side. Build order in meeples:
       "score": 31,
       "success": true,
       "winner": null,
+      "favors": { "Blue": 2, "White": 1 },
       "tableau": [
         { "cardId": "ARCS-L07", "name": "Example Lore" },
         { "cardId": null, "name": "Some Guild Card" }
@@ -69,6 +70,7 @@ Status: agreed 2026-11-14, not yet built on either side. Build order in meeples:
 | `players[].score` | yes | Power at the end of the act, integer. |
 | `players[].success` | Acts I, II | Did the player meet their fate's objective. Omit or `null` in Act III. |
 | `players[].winner` | no | Act III only: `true` for the winner(s) when the game knows it (a C fate can win on its objective regardless of points). `null` lets the league default to highest score. |
+| `players[].favors` | no | Favors the player held at the end of the act: other players' agents, counted by the colour of the player they belong to, e.g. `{ "Blue": 2, "White": 1 }`. `{}` when they held none. Taken at the moment the act ends, before fates are resolved. |
 | `players[].tableau` | no | Cards the player held at the end of the act (Lore, Guild, Vox, court). Each item has `cardId` (Buried Giant id, preferred) and/or `name`; the league matches by id, then by name. Fills the card-tagging data. |
 | `notes` | no | Free text copied into the act's notes. |
 
