@@ -45,7 +45,7 @@ The owner asked to "track stats on lore and guild cards at the end of each act f
 - **`/cards/stats`** (linked from `/cards`, `/records` and each player page): per act (I, II, III), the average Lore and Guild cards per player, then for the chosen act the most-held Lore cards and most-held Guild cards with thumbnails and how their holders did. Uses the stats filters (date range, season, player count).
 - **Player pages**: a "Cards held" panel with the player's average Lore and Guild per act, the cards they held at the end of each act (with how many games), and one row per campaign linking to each tableau.
 
-Definitions (to confirm with the owner):
+Definitions (confirmed by the owner, 2026-11-14):
 
 - **Tableau**: one player at the end of one act. It counts as **recorded** once any card is added to it; an empty tableau cannot be told apart from one nobody filled in, so it is left out (including from the averages).
 - **Lore card**: `type` is `Lore` (base Lore and the fates' own Lore cards).
